@@ -56,16 +56,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // First create the company
-      const { data: company, error: companyError } = await supabase
-        .from("companies")
-        .insert({ name: signupData.companyName })
-        .select()
-        .single();
-
-      if (companyError) throw companyError;
-
-      // Then create the user
+      // Step 1: Create the user first (this authenticates them)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: signupData.email,
         password: signupData.password,
@@ -74,25 +65,47 @@ const Auth = () => {
             first_name: signupData.firstName,
             last_name: signupData.lastName,
           },
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       });
 
       if (authError) throw authError;
+      if (!authData.user) throw new Error("User creation failed");
 
-      if (authData.user) {
-        // Update profile with company_id
-        await supabase
-          .from("profiles")
-          .update({ company_id: company.id })
-          .eq("user_id", authData.user.id);
+      // Step 2: Check if this is the Georgia Industrials admin
+      let companyId: string;
+      
+      if (signupData.email === "ahmad@georgiaindustrials.com") {
+        // Use the pre-existing Georgia Industrials company
+        companyId = "00000000-0000-0000-0000-000000000001";
+      } else {
+        // Step 3: Create a new company (user is now authenticated, so RLS allows this)
+        const { data: company, error: companyError } = await supabase
+          .from("companies")
+          .insert({ name: signupData.companyName })
+          .select()
+          .single();
 
-        // Create admin role for the user
-        await supabase.from("user_roles").insert({
-          user_id: authData.user.id,
-          company_id: company.id,
-          role: "admin",
-        });
+        if (companyError) throw companyError;
+        companyId = company.id;
       }
+
+      // Step 4: Update profile with company_id
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ company_id: companyId })
+        .eq("user_id", authData.user.id);
+
+      if (profileError) throw profileError;
+
+      // Step 5: Create admin role for the user
+      const { error: roleError } = await supabase.from("user_roles").insert({
+        user_id: authData.user.id,
+        company_id: companyId,
+        role: "admin",
+      });
+
+      if (roleError) throw roleError;
 
       toast({
         title: "Success",
@@ -102,8 +115,8 @@ const Auth = () => {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message,
+        title: "Signup Error",
+        description: error.message || "Failed to create account. Please try again.",
       });
     } finally {
       setLoading(false);
