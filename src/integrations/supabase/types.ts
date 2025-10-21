@@ -473,6 +473,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_company_for_user: {
+        Args: {
+          _company_name: string
+          _is_georgia_admin?: boolean
+          _user_id: string
+        }
+        Returns: string
+      }
       get_user_company: {
         Args: { _user_id: string }
         Returns: string

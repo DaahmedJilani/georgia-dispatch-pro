@@ -72,40 +72,20 @@ const Auth = () => {
       if (authError) throw authError;
       if (!authData.user) throw new Error("User creation failed");
 
-      // Step 2: Check if this is the Georgia Industrials admin
-      let companyId: string;
+      // Step 2: Call database function to handle company creation and role assignment
+      // This bypasses RLS issues and handles everything atomically
+      const isGeorgiaAdmin = signupData.email === "ahmad@georgiaindustrials.com";
       
-      if (signupData.email === "ahmad@georgiaindustrials.com") {
-        // Use the pre-existing Georgia Industrials company
-        companyId = "00000000-0000-0000-0000-000000000001";
-      } else {
-        // Step 3: Create a new company (user is now authenticated, so RLS allows this)
-        const { data: company, error: companyError } = await supabase
-          .from("companies")
-          .insert({ name: signupData.companyName })
-          .select()
-          .single();
+      const { error: setupError } = await supabase.rpc(
+        "create_company_for_user",
+        {
+          _company_name: signupData.companyName,
+          _user_id: authData.user.id,
+          _is_georgia_admin: isGeorgiaAdmin,
+        }
+      );
 
-        if (companyError) throw companyError;
-        companyId = company.id;
-      }
-
-      // Step 4: Update profile with company_id
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ company_id: companyId })
-        .eq("user_id", authData.user.id);
-
-      if (profileError) throw profileError;
-
-      // Step 5: Create admin role for the user
-      const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: authData.user.id,
-        company_id: companyId,
-        role: "admin",
-      });
-
-      if (roleError) throw roleError;
+      if (setupError) throw setupError;
 
       toast({
         title: "Success",
