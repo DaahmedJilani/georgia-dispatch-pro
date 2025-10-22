@@ -161,6 +161,25 @@ const Map = () => {
   };
 
   useEffect(() => {
+    // Subscribe to real-time driver location updates
+    const channel = supabase
+      .channel('driver-locations')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'drivers'
+        },
+        (payload) => {
+          console.log('Driver location updated:', payload);
+          if (map) {
+            fetchLoads(map);
+          }
+        }
+      )
+      .subscribe();
+
     // Auto-refresh driver locations every 2 minutes
     const interval = setInterval(() => {
       if (map) {
@@ -168,7 +187,10 @@ const Map = () => {
       }
     }, 120000);
 
-    return () => clearInterval(interval);
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
   }, [map]);
 
   return (

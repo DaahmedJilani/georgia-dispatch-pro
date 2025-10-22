@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Navigation, Upload, Clock } from "lucide-react";
+import { MapPin, Navigation, Upload, Clock, Check, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const DriverPortal = () => {
@@ -16,6 +16,7 @@ const DriverPortal = () => {
   const [driverId, setDriverId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [trackingLocation, setTrackingLocation] = useState(false);
+  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   useEffect(() => {
     checkAuth();
@@ -121,7 +122,7 @@ const DriverPortal = () => {
     );
   };
 
-  const updateLoadStatus = async (loadId: string, newStatus: 'assigned' | 'picked' | 'in_transit' | 'delivered') => {
+  const updateLoadStatus = async (loadId: string, newStatus: 'assigned' | 'picked' | 'in_transit' | 'delivered', action?: string) => {
     try {
       const { error } = await supabase
         .from("loads")
@@ -132,7 +133,7 @@ const DriverPortal = () => {
 
       toast({
         title: "Success",
-        description: "Load status updated successfully",
+        description: action ? `Load ${action} successfully` : "Load status updated successfully",
       });
 
       fetchDriverLoads();
@@ -142,6 +143,80 @@ const DriverPortal = () => {
         description: error.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const acceptLoad = async (loadId: string) => {
+    await updateLoadStatus(loadId, 'assigned', 'accepted');
+  };
+
+  const rejectLoad = async (loadId: string) => {
+    try {
+      const { error } = await supabase
+        .from("loads")
+        .update({ 
+          status: 'pending',
+          driver_id: null 
+        })
+        .eq("id", loadId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Load rejected successfully",
+      });
+
+      fetchDriverLoads();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const uploadPOD = async (loadId: string, file: File) => {
+    try {
+      setLoading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${loadId}/pod-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Create document record
+      const { error: dbError } = await supabase.from("documents").insert([
+        {
+          company_id: (await supabase.from('loads').select('company_id').eq('id', loadId).single()).data?.company_id,
+          load_id: loadId,
+          driver_id: driverId,
+          file_name: file.name,
+          file_path: fileName,
+          document_type: 'proof_of_delivery',
+          file_size: file.size,
+          uploaded_by: (await supabase.auth.getUser()).data.user?.id,
+        },
+      ]);
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "Success",
+        description: "POD uploaded successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -256,15 +331,61 @@ const DriverPortal = () => {
                   )}
 
                   <div className="flex gap-2 flex-wrap">
+                    {load.status === 'assigned' && (
+                      <>
+                        <Button
+                          onClick={() => acceptLoad(load.id)}
+                          variant="default"
+                          size="sm"
+                        >
+                          <Check className="w-4 h-4 mr-2" />
+                          Accept Load
+                        </Button>
+                        <Button
+                          onClick={() => rejectLoad(load.id)}
+                          variant="destructive"
+                          size="sm"
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Reject Load
+                        </Button>
+                      </>
+                    )}
+                    
                     {getNextStatusOptions(load.status).map((nextStatus) => (
                       <Button
                         key={nextStatus}
                         onClick={() => updateLoadStatus(load.id, nextStatus)}
                         variant="outline"
+                        size="sm"
                       >
                         Mark as {nextStatus.replace('_', ' ')}
                       </Button>
                     ))}
+                    
+                    {(load.status === 'in_transit' || load.status === 'delivered') && (
+                      <>
+                        <input
+                          type="file"
+                          ref={(el) => (fileInputRefs.current[load.id] = el)}
+                          style={{ display: 'none' }}
+                          accept="image/*"
+                          capture="environment"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) uploadPOD(load.id, file);
+                          }}
+                        />
+                        <Button
+                          onClick={() => fileInputRefs.current[load.id]?.click()}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload POD
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </Card>

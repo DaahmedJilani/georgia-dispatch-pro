@@ -7,11 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import AirwallexSettings from "@/components/settings/AirwallexSettings";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [companyId, setCompanyId] = useState<string>("");
+  const [airwallexApiKey, setAirwallexApiKey] = useState<string>("");
+  const [airwallexAccountId, setAirwallexAccountId] = useState<string>("");
   const [profile, setProfile] = useState({
     first_name: "",
     last_name: "",
@@ -55,6 +59,8 @@ const Settings = () => {
         });
 
         if (profileData.company_id) {
+          setCompanyId(profileData.company_id);
+          
           const { data: companyData } = await supabase
             .from("companies")
             .select("*")
@@ -68,6 +74,8 @@ const Settings = () => {
               phone: companyData.phone || "",
               address: companyData.address || "",
             });
+            setAirwallexApiKey(companyData.airwallex_api_key || "");
+            setAirwallexAccountId(companyData.airwallex_account_id || "");
           }
         }
       }
@@ -118,85 +126,95 @@ const Settings = () => {
         {loading ? (
           <div className="text-center py-12">Loading settings...</div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Personal Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="first_name">First Name</Label>
-                  <Input
-                    id="first_name"
-                    value={profile.first_name}
-                    onChange={(e) =>
-                      setProfile({ ...profile, first_name: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="last_name">Last Name</Label>
-                  <Input
-                    id="last_name"
-                    value={profile.last_name}
-                    onChange={(e) =>
-                      setProfile({ ...profile, last_name: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={profile.phone}
-                    onChange={(e) =>
-                      setProfile({ ...profile, phone: e.target.value })
-                    }
-                  />
-                </div>
-                <Button onClick={handleSaveProfile}>Save Changes</Button>
-              </CardContent>
-            </Card>
+          <div className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Personal Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="first_name">First Name</Label>
+                    <Input
+                      id="first_name"
+                      value={profile.first_name}
+                      onChange={(e) =>
+                        setProfile({ ...profile, first_name: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="last_name">Last Name</Label>
+                    <Input
+                      id="last_name"
+                      value={profile.last_name}
+                      onChange={(e) =>
+                        setProfile({ ...profile, last_name: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={profile.phone}
+                      onChange={(e) =>
+                        setProfile({ ...profile, phone: e.target.value })
+                      }
+                    />
+                  </div>
+                  <Button onClick={handleSaveProfile}>Save Changes</Button>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Company Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company_name">Company Name</Label>
-                  <Input
-                    id="company_name"
-                    value={company.name}
-                    disabled
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company_email">Email</Label>
-                  <Input
-                    id="company_email"
-                    value={company.email}
-                    disabled
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company_phone">Phone</Label>
-                  <Input
-                    id="company_phone"
-                    value={company.phone}
-                    disabled
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company_address">Address</Label>
-                  <Input
-                    id="company_address"
-                    value={company.address}
-                    disabled
-                  />
-                </div>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Company Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="company_name">Company Name</Label>
+                    <Input
+                      id="company_name"
+                      value={company.name}
+                      disabled
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="company_email">Email</Label>
+                    <Input
+                      id="company_email"
+                      value={company.email}
+                      disabled
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="company_phone">Phone</Label>
+                    <Input
+                      id="company_phone"
+                      value={company.phone}
+                      disabled
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="company_address">Address</Label>
+                    <Input
+                      id="company_address"
+                      value={company.address}
+                      disabled
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {companyId && (
+              <AirwallexSettings
+                companyId={companyId}
+                initialApiKey={airwallexApiKey}
+                initialAccountId={airwallexAccountId}
+              />
+            )}
           </div>
         )}
       </div>
