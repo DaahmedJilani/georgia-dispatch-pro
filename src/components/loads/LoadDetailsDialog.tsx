@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, MapPin, Calendar, Package, DollarSign, FileText, Truck, User, Building2, Upload, Download, Eye } from "lucide-react";
+import { Loader2, MapPin, Calendar, Package, DollarSign, FileText, Truck, User, Building2, Upload, Download, Eye, Sparkles } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { AIAssistDialog } from "@/components/ai/AIAssistDialog";
 
 interface LoadDetailsDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ const LoadDetailsDialog = ({ open, onOpenChange, loadId, onUpdate }: LoadDetails
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
 
   useEffect(() => {
     if (loadId && open) {
