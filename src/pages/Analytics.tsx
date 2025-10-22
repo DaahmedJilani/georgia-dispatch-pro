@@ -61,7 +61,7 @@ const Analytics = () => {
       if (!loads) return;
 
       // Calculate analytics
-      const totalRevenue = loads.reduce((sum, load) => sum + (parseFloat(load.rate) || 0), 0);
+      const totalRevenue = loads.reduce((sum, load) => sum + (Number(load.rate) || 0), 0);
       const completedLoads = loads.filter(l => l.status === 'delivered').length;
       
       // Top performing drivers
@@ -77,7 +77,7 @@ const Analytics = () => {
             };
           }
           acc[key].loads += 1;
-          acc[key].revenue += parseFloat(load.rate) || 0;
+          acc[key].revenue += Number(load.rate) || 0;
         }
         return acc;
       }, {});
@@ -100,7 +100,7 @@ const Analytics = () => {
             };
           }
           acc[key].loads += 1;
-          acc[key].revenue += parseFloat(load.rate) || 0;
+          acc[key].revenue += Number(load.rate) || 0;
         }
         return acc;
       }, {});
@@ -113,7 +113,7 @@ const Analytics = () => {
       const revenueByStatus = loads.reduce((acc: any, load) => {
         const status = load.status || 'unknown';
         if (!acc[status]) acc[status] = 0;
-        acc[status] += parseFloat(load.rate) || 0;
+        acc[status] += Number(load.rate) || 0;
         return acc;
       }, {});
 
