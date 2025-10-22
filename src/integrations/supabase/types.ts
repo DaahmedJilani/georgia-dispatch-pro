@@ -157,7 +157,7 @@ export type Database = {
           document_type: string
           driver_id: string | null
           file_name: string
-          file_path: string
+          file_path: string | null
           file_size: number | null
           id: string
           load_id: string | null
@@ -169,7 +169,7 @@ export type Database = {
           document_type: string
           driver_id?: string | null
           file_name: string
-          file_path: string
+          file_path?: string | null
           file_size?: number | null
           id?: string
           load_id?: string | null
@@ -181,7 +181,7 @@ export type Database = {
           document_type?: string
           driver_id?: string | null
           file_name?: string
-          file_path?: string
+          file_path?: string | null
           file_size?: number | null
           id?: string
           load_id?: string | null
@@ -272,6 +272,78 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          airwallex_payment_id: string | null
+          airwallex_payment_link: string | null
+          amount: number
+          broker_id: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          due_date: string
+          id: string
+          invoice_date: string
+          invoice_number: string
+          load_id: string | null
+          notes: string | null
+          payment_date: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          airwallex_payment_id?: string | null
+          airwallex_payment_link?: string | null
+          amount: number
+          broker_id?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          due_date: string
+          id?: string
+          invoice_date?: string
+          invoice_number: string
+          load_id?: string | null
+          notes?: string | null
+          payment_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          airwallex_payment_id?: string | null
+          airwallex_payment_link?: string | null
+          amount?: number
+          broker_id?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string
+          id?: string
+          invoice_date?: string
+          invoice_number?: string
+          load_id?: string | null
+          notes?: string | null
+          payment_date?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_broker_id_fkey"
+            columns: ["broker_id"]
+            isOneToOne: false
+            referencedRelation: "brokers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_load_id_fkey"
+            columns: ["load_id"]
+            isOneToOne: false
+            referencedRelation: "loads"
             referencedColumns: ["id"]
           },
         ]
@@ -397,10 +469,13 @@ export type Database = {
           avatar_url: string | null
           company_id: string | null
           created_at: string
+          email_notifications: boolean | null
           first_name: string | null
           id: string
           last_name: string | null
+          notifications_enabled: boolean | null
           phone: string | null
+          sms_notifications: boolean | null
           updated_at: string
           user_id: string
         }
@@ -408,10 +483,13 @@ export type Database = {
           avatar_url?: string | null
           company_id?: string | null
           created_at?: string
+          email_notifications?: boolean | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          notifications_enabled?: boolean | null
           phone?: string | null
+          sms_notifications?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -419,10 +497,13 @@ export type Database = {
           avatar_url?: string | null
           company_id?: string | null
           created_at?: string
+          email_notifications?: boolean | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          notifications_enabled?: boolean | null
           phone?: string | null
+          sms_notifications?: boolean | null
           updated_at?: string
           user_id?: string
         }

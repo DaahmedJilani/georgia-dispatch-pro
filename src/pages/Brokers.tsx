@@ -14,12 +14,15 @@ import {
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CreateBrokerDialog } from "@/components/brokers/CreateBrokerDialog";
 
 const Brokers = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [brokers, setBrokers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [companyId, setCompanyId] = useState("");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -35,6 +38,19 @@ const Brokers = () => {
 
   const fetchBrokers = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profile?.company_id) {
+        setCompanyId(profile.company_id);
+      }
+
       const { data, error } = await supabase
         .from("brokers")
         .select("*")
@@ -61,7 +77,7 @@ const Brokers = () => {
             <h1 className="text-3xl font-bold">Brokers</h1>
             <p className="text-muted-foreground">Manage your broker relationships</p>
           </div>
-          <Button>
+          <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Broker
           </Button>
@@ -117,6 +133,13 @@ const Brokers = () => {
           </Table>
         </Card>
       </div>
+
+      <CreateBrokerDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={fetchBrokers}
+        companyId={companyId}
+      />
     </DashboardLayout>
   );
 };
