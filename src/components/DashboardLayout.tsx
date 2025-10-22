@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import fleetLogo from "@/assets/fleet-logo.png";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -99,7 +100,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-primary text-white px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Truck className="w-6 h-6" />
+          <img src={fleetLogo} alt="Fleet Logo" className="w-8 h-8" />
           <span className="font-semibold">Fleet</span>
         </div>
         <Button
@@ -122,9 +123,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="flex h-full flex-col">
           {/* Logo */}
           <div className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-sidebar-accent">
-              <Truck className="w-6 h-6 text-sidebar-accent-foreground" />
-            </div>
+            <img 
+              src={fleetLogo} 
+              alt="Fleet by Georgia Industrials" 
+              className="w-12 h-12 object-contain"
+            />
             <div>
               <h1 className="text-lg font-semibold text-sidebar-foreground">Fleet</h1>
               <p className="text-xs text-sidebar-foreground/60">by Georgia Industrials</p>
