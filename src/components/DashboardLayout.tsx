@@ -15,6 +15,9 @@ import {
   LogOut,
   Menu,
   X,
+  DollarSign,
+  MapPin,
+  Navigation,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import fleetLogo from "@/assets/fleet-logo.png";
@@ -80,6 +83,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     { icon: Users, label: "Brokers", path: "/brokers" },
     { icon: Building2, label: "Carriers", path: "/carriers" },
     { icon: FileText, label: "Documents", path: "/documents" },
+    { icon: DollarSign, label: "Invoices", path: "/invoices" },
+    { icon: MapPin, label: "Live Map", path: "/map" },
+    { icon: Navigation, label: "Driver Portal", path: "/driver-portal" },
     { icon: BarChart3, label: "Analytics", path: "/analytics" },
     { icon: Settings, label: "Settings", path: "/settings" },
   ];

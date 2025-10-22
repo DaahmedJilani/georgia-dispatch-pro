@@ -15,12 +15,27 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CreateDriverDialog } from "@/components/drivers/CreateDriverDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Drivers = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [drivers, setDrivers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [companyId, setCompanyId] = useState("");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [driverToDelete, setDriverToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -36,6 +51,19 @@ const Drivers = () => {
 
   const fetchDrivers = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profile?.company_id) {
+        setCompanyId(profile.company_id);
+      }
+
       const { data, error } = await supabase
         .from("drivers")
         .select("*")
@@ -51,6 +79,35 @@ const Drivers = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!driverToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("drivers")
+        .delete()
+        .eq("id", driverToDelete);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Driver deleted successfully",
+      });
+
+      fetchDrivers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setDriverToDelete(null);
     }
   };
 
@@ -71,7 +128,7 @@ const Drivers = () => {
             <h1 className="text-3xl font-bold">Drivers</h1>
             <p className="text-muted-foreground">Manage your fleet drivers</p>
           </div>
-          <Button>
+          <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Driver
           </Button>
@@ -118,10 +175,14 @@ const Drivers = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setDriverToDelete(driver.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -133,6 +194,28 @@ const Drivers = () => {
           </Table>
         </Card>
       </div>
+
+      <CreateDriverDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={fetchDrivers}
+        companyId={companyId}
+      />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Driver</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this driver? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };

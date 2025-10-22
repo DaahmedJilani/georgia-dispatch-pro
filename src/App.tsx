@@ -11,6 +11,9 @@ import Drivers from "./pages/Drivers";
 import Brokers from "./pages/Brokers";
 import Carriers from "./pages/Carriers";
 import Documents from "./pages/Documents";
+import Invoices from "./pages/Invoices";
+import Map from "./pages/Map";
+import DriverPortal from "./pages/DriverPortal";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -32,6 +35,9 @@ const App = () => (
           <Route path="/brokers" element={<Brokers />} />
           <Route path="/carriers" element={<Carriers />} />
           <Route path="/documents" element={<Documents />} />
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/map" element={<Map />} />
+          <Route path="/driver-portal" element={<DriverPortal />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

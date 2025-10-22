@@ -11,8 +11,8 @@ const Map = () => {
   const { toast } = useToast();
   const [loads, setLoads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
+  const [map, setMap] = useState<any>(null);
+  const [markers, setMarkers] = useState<any[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -38,7 +38,7 @@ const Map = () => {
       return;
     }
 
-    if (window.google?.maps) {
+    if ((window as any).google?.maps) {
       initMap();
       return;
     }
@@ -53,8 +53,9 @@ const Map = () => {
 
   const initMap = async () => {
     const mapElement = document.getElementById('map');
-    if (!mapElement) return;
+    if (!mapElement || !(window as any).google) return;
 
+    const google = (window as any).google;
     const mapInstance = new google.maps.Map(mapElement, {
       center: { lat: 39.8283, lng: -98.5795 }, // Center of USA
       zoom: 4,
@@ -67,7 +68,7 @@ const Map = () => {
     await fetchLoads(mapInstance);
   };
 
-  const fetchLoads = async (mapInstance: google.maps.Map) => {
+  const fetchLoads = async (mapInstance: any) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -106,10 +107,14 @@ const Map = () => {
     }
   };
 
-  const addMarkersToMap = (loadsData: any[], mapInstance: google.maps.Map) => {
+  const addMarkersToMap = (loadsData: any[], mapInstance: any) => {
+    if (!(window as any).google) return;
+    
+    const google = (window as any).google;
+    
     // Clear existing markers
-    markers.forEach(marker => marker.setMap(null));
-    const newMarkers: google.maps.Marker[] = [];
+    markers.forEach((marker: any) => marker.setMap(null));
+    const newMarkers: any[] = [];
 
     loadsData.forEach(load => {
       // Add driver location marker if available
