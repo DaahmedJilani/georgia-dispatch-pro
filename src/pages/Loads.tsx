@@ -2,22 +2,33 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Filter } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Search, Filter, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import CreateLoadDialog from "@/components/loads/CreateLoadDialog";
+import LoadDetailsDialog from "@/components/loads/LoadDetailsDialog";
 
 const Loads = () => {
   const { toast } = useToast();
   const [loads, setLoads] = useState<any[]>([]);
+  const [drivers, setDrivers] = useState<any[]>([]);
+  const [brokers, setBrokers] = useState<any[]>([]);
+  const [carriers, setCarriers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [selectedLoadId, setSelectedLoadId] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string>("");
 
   useEffect(() => {
-    fetchLoads();
+    fetchData();
   }, []);
 
-  const fetchLoads = async () => {
+  const fetchData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -30,20 +41,43 @@ const Loads = () => {
 
       if (!profile?.company_id) return;
 
-      const { data, error } = await supabase
-        .from("loads")
-        .select("*, drivers(first_name, last_name), brokers(name)")
-        .eq("company_id", profile.company_id)
-        .order("created_at", { ascending: false });
+      setCompanyId(profile.company_id);
 
-      if (error) throw error;
+      // Fetch all data in parallel
+      const [loadsRes, driversRes, brokersRes, carriersRes] = await Promise.all([
+        supabase
+          .from("loads")
+          .select("*, drivers(first_name, last_name), brokers(name), carriers(name)")
+          .eq("company_id", profile.company_id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("drivers")
+          .select("*")
+          .eq("company_id", profile.company_id)
+          .order("first_name"),
+        supabase
+          .from("brokers")
+          .select("*")
+          .eq("company_id", profile.company_id)
+          .order("name"),
+        supabase
+          .from("carriers")
+          .select("*")
+          .eq("company_id", profile.company_id)
+          .order("name"),
+      ]);
 
-      setLoads(data || []);
+      if (loadsRes.error) throw loadsRes.error;
+
+      setLoads(loadsRes.data || []);
+      setDrivers(driversRes.data || []);
+      setBrokers(brokersRes.data || []);
+      setCarriers(carriersRes.data || []);
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to fetch loads",
+        description: "Failed to fetch data",
       });
     } finally {
       setLoading(false);
@@ -62,11 +96,22 @@ const Loads = () => {
     return classes[status] || "status-pending";
   };
 
-  const filteredLoads = loads.filter((load) =>
-    load.load_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    load.pickup_city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    load.delivery_city?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredLoads = loads.filter((load) => {
+    const matchesSearch = 
+      load.load_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      load.pickup_city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      load.delivery_city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      load.commodity?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || load.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleLoadClick = (loadId: string) => {
+    setSelectedLoadId(loadId);
+    setDetailsDialogOpen(true);
+  };
 
   return (
     <DashboardLayout>
@@ -77,7 +122,7 @@ const Loads = () => {
             <h1 className="text-3xl font-bold tracking-tight">Loads</h1>
             <p className="text-muted-foreground">Manage and track all your shipments</p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setCreateDialogOpen(true)}>
             <Plus className="w-4 h-4" />
             Create Load
           </Button>
@@ -90,16 +135,39 @@ const Loads = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by load number, city..."
+                  placeholder="Search by load number, city, commodity..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9"
                 />
               </div>
-              <Button variant="outline" className="gap-2">
-                <Filter className="w-4 h-4" />
-                Filters
-              </Button>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="assigned">Assigned</SelectItem>
+                  <SelectItem value="picked">Picked Up</SelectItem>
+                  <SelectItem value="in_transit">In Transit</SelectItem>
+                  <SelectItem value="delivered">Delivered</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+              {(searchTerm || statusFilter !== "all") && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                  }}
+                  title="Clear filters"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -127,7 +195,7 @@ const Loads = () => {
                         : "Get started by creating your first load"}
                     </p>
                     {!searchTerm && (
-                      <Button>
+                      <Button onClick={() => setCreateDialogOpen(true)}>
                         <Plus className="w-4 h-4 mr-2" />
                         Create Load
                       </Button>
@@ -138,7 +206,11 @@ const Loads = () => {
             </Card>
           ) : (
             filteredLoads.map((load) => (
-              <Card key={load.id} className="glass-card transition-smooth hover:shadow-lg cursor-pointer">
+              <Card 
+                key={load.id} 
+                className="glass-card transition-smooth hover:shadow-lg cursor-pointer"
+                onClick={() => handleLoadClick(load.id)}
+              >
                 <CardContent className="p-6">
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div className="space-y-3 flex-1">
@@ -215,6 +287,24 @@ const Loads = () => {
           )}
         </div>
       </div>
+
+      {/* Dialogs */}
+      <CreateLoadDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={fetchData}
+        drivers={drivers}
+        brokers={brokers}
+        carriers={carriers}
+        companyId={companyId}
+      />
+
+      <LoadDetailsDialog
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
+        loadId={selectedLoadId}
+        onUpdate={fetchData}
+      />
     </DashboardLayout>
   );
 };
