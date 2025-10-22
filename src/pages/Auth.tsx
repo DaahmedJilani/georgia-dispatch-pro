@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Truck } from "lucide-react";
+import fleetLogo from "@/assets/fleet-logo.png";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -107,8 +107,8 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center gradient-primary p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent mb-4">
-            <Truck className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <img src={fleetLogo} alt="Fleet Logo" className="w-24 h-24 object-contain" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Fleet</h1>
           <p className="text-accent-foreground/80">by Georgia Industrials</p>

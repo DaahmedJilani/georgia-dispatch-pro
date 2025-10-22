@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Truck, BarChart3, Users, MapPin, FileText, Zap } from "lucide-react";
+import fleetLogo from "@/assets/fleet-logo.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -56,8 +57,8 @@ const Index = () => {
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="container relative mx-auto px-4 py-24 lg:py-32">
           <div className="max-w-4xl mx-auto text-center space-y-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-accent/20 backdrop-blur-sm mb-6">
-              <Truck className="w-10 h-10" />
+            <div className="inline-flex items-center justify-center mb-6">
+              <img src={fleetLogo} alt="Fleet Logo" className="w-32 h-32 object-contain" />
             </div>
             <h1 className="text-5xl lg:text-7xl font-bold tracking-tight">
               Fleet by Georgia Industrials
@@ -80,9 +81,9 @@ const Index = () => {
               </Button>
               <Button
                 size="lg"
-                variant="outline"
+                variant="secondary"
                 onClick={() => navigate("/auth")}
-                className="text-lg px-8 py-6 border-white text-white hover:bg-white/10"
+                className="text-lg px-8 py-6"
               >
                 Sign In
               </Button>
