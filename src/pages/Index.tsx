@@ -58,11 +58,8 @@ const Index = () => {
         <div className="container relative mx-auto px-4 py-24 lg:py-32">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="inline-flex items-center justify-center mb-6">
-              <img src={fleetLogo} alt="Fleet Logo" className="w-32 h-32 object-contain" />
+              <img src={fleetLogo} alt="Fleet by Georgia Industrials Logo" className="w-48 h-48 object-contain" />
             </div>
-            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-foreground">
-              Fleet by Georgia Industrials
-            </h1>
             <p className="text-xl lg:text-2xl text-foreground/80 max-w-2xl mx-auto">
               Smart Dispatch. Simplified.
             </p>
@@ -148,7 +145,7 @@ const Index = () => {
       <footer className="bg-secondary py-8 text-secondary-foreground">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm">
-            © 2025 Fleet by Georgia Industrials. All rights reserved.
+            © 2025 All rights reserved.
           </p>
         </div>
       </footer>
