@@ -14,6 +14,7 @@ import Documents from "./pages/Documents";
 import Invoices from "./pages/Invoices";
 import Map from "./pages/Map";
 import DriverPortal from "./pages/DriverPortal";
+import CarrierPortal from "./pages/CarrierPortal";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/map" element={<Map />} />
           <Route path="/driver-portal" element={<DriverPortal />} />
+          <Route path="/carrier-portal" element={<CarrierPortal />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

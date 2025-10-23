@@ -11,15 +11,27 @@ import { Upload } from "lucide-react";
 interface DocumentUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
-  companyId: string;
+  onSuccess?: () => void;
+  companyId?: string;
+  loadId?: string;
+  driverId?: string;
+  carrierId?: string;
 }
 
-export const DocumentUploadDialog = ({ open, onOpenChange, onSuccess, companyId }: DocumentUploadDialogProps) => {
+export const DocumentUploadDialog = ({ 
+  open, 
+  onOpenChange, 
+  onSuccess, 
+  companyId,
+  loadId,
+  driverId,
+  carrierId 
+}: DocumentUploadDialogProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState("other");
+  const [visibility, setVisibility] = useState("dispatcher");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,9 +47,25 @@ export const DocumentUploadDialog = ({ open, onOpenChange, onSuccess, companyId 
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Get company ID if not provided
+      let finalCompanyId = companyId;
+      if (!finalCompanyId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("company_id")
+          .eq("user_id", user.id)
+          .single();
+        finalCompanyId = profile?.company_id;
+      }
+
+      if (!finalCompanyId) throw new Error("Company ID not found");
+
       // Upload file to storage
       const fileExt = file.name.split('.').pop();
-      const fileName = `${companyId}/${Date.now()}-${file.name}`;
+      const fileName = `${finalCompanyId}/${Date.now()}-${file.name}`;
       
       const { error: uploadError } = await supabase.storage
         .from('documents')
@@ -45,20 +73,19 @@ export const DocumentUploadDialog = ({ open, onOpenChange, onSuccess, companyId 
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(fileName);
-
       // Create document record
       const { error: dbError } = await supabase.from("documents").insert([
         {
-          company_id: companyId,
+          company_id: finalCompanyId,
           file_name: file.name,
           file_path: fileName,
           document_type: documentType,
           file_size: file.size,
-          uploaded_by: (await supabase.auth.getUser()).data.user?.id,
+          uploaded_by: user.id,
+          load_id: loadId || null,
+          driver_id: driverId || null,
+          carrier_id: carrierId || null,
+          visibility: visibility,
         },
       ]);
 
@@ -71,8 +98,9 @@ export const DocumentUploadDialog = ({ open, onOpenChange, onSuccess, companyId 
 
       setFile(null);
       setDocumentType("other");
+      setVisibility("dispatcher");
       onOpenChange(false);
-      onSuccess();
+      if (onSuccess) onSuccess();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -105,6 +133,21 @@ export const DocumentUploadDialog = ({ open, onOpenChange, onSuccess, companyId 
                 <SelectItem value="insurance">Insurance</SelectItem>
                 <SelectItem value="rate_confirmation">Rate Confirmation</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="visibility">Visibility *</Label>
+            <Select value={visibility} onValueChange={setVisibility}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dispatcher">Dispatcher Only</SelectItem>
+                <SelectItem value="sales">Sales Only</SelectItem>
+                <SelectItem value="driver">Driver Access</SelectItem>
+                <SelectItem value="carrier">Carrier Access</SelectItem>
               </SelectContent>
             </Select>
           </div>

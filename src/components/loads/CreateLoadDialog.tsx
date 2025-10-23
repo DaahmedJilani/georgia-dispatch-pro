@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Upload } from "lucide-react";
+import { SalesMetadataForm } from "./SalesMetadataForm";
 
 interface CreateLoadDialogProps {
   open: boolean;
@@ -30,6 +31,8 @@ const CreateLoadDialog = ({
 }: CreateLoadDialogProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [salesPercentage, setSalesPercentage] = useState(0);
+  const [factoring, setFactoring] = useState(false);
   const [formData, setFormData] = useState({
     load_number: `LOAD-${Date.now()}`,
     pickup_location: "",
@@ -65,6 +68,7 @@ const CreateLoadDialog = ({
         ...formData,
         company_id: companyId,
         created_by: user.id,
+        sales_user_id: user.id,
         status: "pending",
         weight: formData.weight ? parseFloat(formData.weight) : null,
         distance: formData.distance ? parseFloat(formData.distance) : null,
@@ -72,6 +76,8 @@ const CreateLoadDialog = ({
         driver_id: formData.driver_id || null,
         broker_id: formData.broker_id || null,
         carrier_id: formData.carrier_id || null,
+        sales_percentage: salesPercentage || null,
+        factoring: factoring,
       });
 
       if (error) throw error;
@@ -360,6 +366,14 @@ const CreateLoadDialog = ({
               </div>
             </div>
           </div>
+
+          {/* Sales Metadata */}
+          <SalesMetadataForm
+            salesPercentage={salesPercentage}
+            factoring={factoring}
+            onSalesPercentageChange={setSalesPercentage}
+            onFactoringChange={setFactoring}
+          />
 
           {/* Additional Notes */}
           <div className="space-y-2">

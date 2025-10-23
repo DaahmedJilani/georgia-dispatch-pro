@@ -76,14 +76,32 @@ export function WIPPanel() {
 
       const { data, error } = await supabase
         .from("wip_assignments")
-        .select(`
-          *,
-          profiles!wip_assignments_user_id_fkey(first_name, last_name)
-        `)
+        .select("*")
         .order("requested_at", { ascending: false });
 
       if (error) throw error;
-      setAssignments(data || []);
+
+      // Fetch profiles for each assignment
+      if (data && data.length > 0) {
+        const userIds = data.map(a => a.user_id);
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("user_id, first_name, last_name")
+          .in("user_id", userIds);
+
+        const profilesMap = new Map(
+          profilesData?.map(p => [p.user_id, p]) || []
+        );
+
+        const enrichedData = data.map(assignment => ({
+          ...assignment,
+          profiles: profilesMap.get(assignment.user_id) || { first_name: "Unknown", last_name: "User" }
+        }));
+
+        setAssignments(enrichedData as WIPAssignment[]);
+      } else {
+        setAssignments([]);
+      }
     } catch (error) {
       console.error("Error fetching WIP assignments:", error);
       toast({

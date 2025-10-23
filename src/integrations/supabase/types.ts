@@ -64,11 +64,64 @@ export type Database = {
           },
         ]
       }
+      carrier_contacts: {
+        Row: {
+          carrier_id: string
+          company_id: string
+          contact_date: string
+          contact_method: string | null
+          contact_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          carrier_id: string
+          company_id: string
+          contact_date?: string
+          contact_method?: string | null
+          contact_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          carrier_id?: string
+          company_id?: string
+          contact_date?: string
+          contact_method?: string | null
+          contact_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carrier_contacts_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "carriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carrier_contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       carriers: {
         Row: {
           address: string | null
           company_id: string
+          contract_signed: boolean | null
           created_at: string
+          docusign_envelope_id: string | null
           dot_number: string | null
           email: string | null
           id: string
@@ -82,7 +135,9 @@ export type Database = {
         Insert: {
           address?: string | null
           company_id: string
+          contract_signed?: boolean | null
           created_at?: string
+          docusign_envelope_id?: string | null
           dot_number?: string | null
           email?: string | null
           id?: string
@@ -96,7 +151,9 @@ export type Database = {
         Update: {
           address?: string | null
           company_id?: string
+          contract_signed?: boolean | null
           created_at?: string
+          docusign_envelope_id?: string | null
           dot_number?: string | null
           email?: string | null
           id?: string
@@ -158,6 +215,7 @@ export type Database = {
       }
       documents: {
         Row: {
+          carrier_id: string | null
           company_id: string
           created_at: string
           document_type: string
@@ -168,8 +226,10 @@ export type Database = {
           id: string
           load_id: string | null
           uploaded_by: string | null
+          visibility: string | null
         }
         Insert: {
+          carrier_id?: string | null
           company_id: string
           created_at?: string
           document_type: string
@@ -180,8 +240,10 @@ export type Database = {
           id?: string
           load_id?: string | null
           uploaded_by?: string | null
+          visibility?: string | null
         }
         Update: {
+          carrier_id?: string | null
           company_id?: string
           created_at?: string
           document_type?: string
@@ -192,8 +254,16 @@ export type Database = {
           id?: string
           load_id?: string | null
           uploaded_by?: string | null
+          visibility?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "carriers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documents_company_id_fkey"
             columns: ["company_id"]
@@ -219,6 +289,7 @@ export type Database = {
       }
       drivers: {
         Row: {
+          carrier_id: string | null
           company_id: string
           created_at: string
           current_location_lat: number | null
@@ -237,6 +308,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          carrier_id?: string | null
           company_id: string
           created_at?: string
           current_location_lat?: number | null
@@ -255,6 +327,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          carrier_id?: string | null
           company_id?: string
           created_at?: string
           current_location_lat?: number | null
@@ -273,6 +346,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "drivers_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "carriers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "drivers_company_id_fkey"
             columns: ["company_id"]
@@ -298,6 +378,7 @@ export type Database = {
           load_id: string | null
           notes: string | null
           payment_date: string | null
+          payment_status: string | null
           status: string
           updated_at: string
         }
@@ -316,6 +397,7 @@ export type Database = {
           load_id?: string | null
           notes?: string | null
           payment_date?: string | null
+          payment_status?: string | null
           status?: string
           updated_at?: string
         }
@@ -334,6 +416,7 @@ export type Database = {
           load_id?: string | null
           notes?: string | null
           payment_date?: string | null
+          payment_status?: string | null
           status?: string
           updated_at?: string
         }
@@ -369,6 +452,7 @@ export type Database = {
           delivery_state: string | null
           distance: number | null
           driver_id: string | null
+          factoring: boolean | null
           id: string
           load_number: string
           notes: string | null
@@ -379,6 +463,8 @@ export type Database = {
           pickup_state: string | null
           rate: number | null
           reference_number: string | null
+          sales_percentage: number | null
+          sales_user_id: string | null
           status: Database["public"]["Enums"]["load_status"] | null
           updated_at: string
           weight: number | null
@@ -397,6 +483,7 @@ export type Database = {
           delivery_state?: string | null
           distance?: number | null
           driver_id?: string | null
+          factoring?: boolean | null
           id?: string
           load_number: string
           notes?: string | null
@@ -407,6 +494,8 @@ export type Database = {
           pickup_state?: string | null
           rate?: number | null
           reference_number?: string | null
+          sales_percentage?: number | null
+          sales_user_id?: string | null
           status?: Database["public"]["Enums"]["load_status"] | null
           updated_at?: string
           weight?: number | null
@@ -425,6 +514,7 @@ export type Database = {
           delivery_state?: string | null
           distance?: number | null
           driver_id?: string | null
+          factoring?: boolean | null
           id?: string
           load_number?: string
           notes?: string | null
@@ -435,6 +525,8 @@ export type Database = {
           pickup_state?: string | null
           rate?: number | null
           reference_number?: string | null
+          sales_percentage?: number | null
+          sales_user_id?: string | null
           status?: Database["public"]["Enums"]["load_status"] | null
           updated_at?: string
           weight?: number | null
@@ -466,6 +558,56 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          author_id: string
+          company_id: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          is_read: boolean | null
+          note_text: string
+          priority: string | null
+          recipient_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          company_id: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_read?: boolean | null
+          note_text: string
+          priority?: string | null
+          recipient_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          company_id?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_read?: boolean | null
+          note_text?: string
+          priority?: string | null
+          recipient_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -551,6 +693,77 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wip_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          carrier_id: string | null
+          company_id: string
+          driver_id: string | null
+          id: string
+          load_id: string | null
+          notes: string | null
+          requested_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          carrier_id?: string | null
+          company_id: string
+          driver_id?: string | null
+          id?: string
+          load_id?: string | null
+          notes?: string | null
+          requested_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          carrier_id?: string | null
+          company_id?: string
+          driver_id?: string | null
+          id?: string
+          load_id?: string | null
+          notes?: string | null
+          requested_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wip_assignments_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "carriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wip_assignments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wip_assignments_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wip_assignments_load_id_fkey"
+            columns: ["load_id"]
+            isOneToOne: false
+            referencedRelation: "loads"
             referencedColumns: ["id"]
           },
         ]

@@ -3,6 +3,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, Truck, Users, DollarSign, TrendingUp, Clock } from "lucide-react";
+import { WIPPanel } from "@/components/wip/WIPPanel";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -147,6 +148,9 @@ const Dashboard = () => {
             );
           })}
         </div>
+
+        {/* WIP Panel */}
+        <WIPPanel />
 
         {/* Recent Loads */}
         <Card className="glass-card">
