@@ -53,27 +53,27 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden gradient-primary text-white">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+      <section className="relative overflow-hidden bg-background">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
         <div className="container relative mx-auto px-4 py-24 lg:py-32">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="inline-flex items-center justify-center mb-6">
               <img src={fleetLogo} alt="Fleet Logo" className="w-32 h-32 object-contain" />
             </div>
-            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight">
+            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-foreground">
               Fleet by Georgia Industrials
             </h1>
-            <p className="text-xl lg:text-2xl text-white/90 max-w-2xl mx-auto">
+            <p className="text-xl lg:text-2xl text-foreground/80 max-w-2xl mx-auto">
               Smart Dispatch. Simplified.
             </p>
-            <p className="text-lg text-white/80 max-w-3xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
               Professional dispatch management platform for logistics companies. Multi-tenant SaaS
               solution with real-time tracking, load management, and AI-powered features.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Button
                 size="lg"
-                variant="secondary"
+                variant="default"
                 onClick={() => navigate("/auth")}
                 className="text-lg px-8 py-6"
               >
@@ -81,7 +81,7 @@ const Index = () => {
               </Button>
               <Button
                 size="lg"
-                variant="secondary"
+                variant="outline"
                 onClick={() => navigate("/auth")}
                 className="text-lg px-8 py-6"
               >
@@ -93,13 +93,13 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-background">
+      <section className="py-24 gradient-primary text-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-white">
               Everything You Need to Manage Your Fleet
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-white/80 max-w-2xl mx-auto">
               Built for dispatch companies of all sizes, from single-truck operations to large fleets
             </p>
           </div>
@@ -110,13 +110,13 @@ const Index = () => {
               return (
                 <div
                   key={feature.title}
-                  className="glass-card p-6 transition-smooth hover:shadow-lg group"
+                  className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6 transition-smooth hover:bg-white/15 hover:shadow-lg group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-smooth">
-                    <Icon className="w-6 h-6 text-primary" />
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4 group-hover:bg-white/30 transition-smooth">
+                    <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
+                  <h3 className="text-xl font-semibold mb-2 text-white">{feature.title}</h3>
+                  <p className="text-white/70">{feature.description}</p>
                 </div>
               );
             })}
@@ -125,17 +125,17 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 gradient-primary text-white">
+      <section className="py-24 bg-background">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-foreground">
             Ready to Streamline Your Dispatch Operations?
           </h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Join leading dispatch companies using Fleet to optimize their operations
           </p>
           <Button
             size="lg"
-            variant="secondary"
+            variant="default"
             onClick={() => navigate("/auth")}
             className="text-lg px-8 py-6"
           >
