@@ -7,10 +7,7 @@ const corsHeaders = {
 };
 
 interface PaymentLinkRequest {
-  invoiceId: string;
-  amount: number;
-  invoiceNumber: string;
-  description?: string;
+  invoice_id: string;
 }
 
 serve(async (req) => {
@@ -23,14 +20,59 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { invoiceId, amount, invoiceNumber, description } = await req.json() as PaymentLinkRequest;
+    const { invoice_id } = await req.json() as PaymentLinkRequest;
+    
+    console.log('Generating payment link for invoice:', invoice_id);
 
-    const airwallexApiKey = Deno.env.get("AIRWALLEX_API_KEY");
-    const airwallexAccountId = Deno.env.get("AIRWALLEX_ACCOUNT_ID");
+    // Fetch invoice details with company info
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .select('*, company:companies(*)')
+      .eq('id', invoice_id)
+      .single();
+
+    if (invoiceError || !invoice) {
+      throw new Error('Invoice not found');
+    }
+
+    // Check if invoice is already paid
+    if (invoice.payment_status === 'paid') {
+      throw new Error('Invoice is already paid');
+    }
+
+    // Check for existing payment link (idempotency)
+    if (invoice.payment_link_id && invoice.airwallex_payment_link) {
+      // Check if link is still valid (not expired)
+      const expiresAt = invoice.payment_link_expires_at ? new Date(invoice.payment_link_expires_at) : null;
+      const now = new Date();
+      
+      if (!expiresAt || expiresAt > now) {
+        console.log('Returning existing payment link (idempotency):', invoice.payment_link_id);
+        return new Response(
+          JSON.stringify({
+            success: true,
+            paymentLink: invoice.airwallex_payment_link,
+            paymentId: invoice.payment_link_id,
+            expiresAt: invoice.payment_link_expires_at,
+            isExisting: true,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
+      } else {
+        console.log('Existing payment link expired, creating new one');
+      }
+    }
+
+    // Use company-specific Airwallex credentials if available, otherwise fallback to global
+    const airwallexApiKey = invoice.company?.airwallex_api_key || Deno.env.get('AIRWALLEX_API_KEY');
+    const airwallexAccountId = invoice.company?.airwallex_account_id || Deno.env.get('AIRWALLEX_ACCOUNT_ID');
 
     if (!airwallexApiKey || !airwallexAccountId) {
-      throw new Error("Airwallex credentials not configured");
+      throw new Error('Airwallex credentials not configured');
     }
+
+    const usingCompanyCredentials = !!invoice.company?.airwallex_api_key;
+    console.log('Using', usingCompanyCredentials ? 'company-specific' : 'global', 'Airwallex credentials');
 
     // Authenticate with Airwallex
     const authResponse = await fetch("https://api.airwallex.com/api/v1/authentication/login", {
@@ -53,6 +95,8 @@ serve(async (req) => {
     const authData = await authResponse.json();
     const accessToken = authData.token;
 
+    console.log('Airwallex authentication successful');
+
     // Create payment link
     const paymentLinkResponse = await fetch("https://api.airwallex.com/api/v1/pa/payment_links/create", {
       method: "POST",
@@ -61,11 +105,11 @@ serve(async (req) => {
         "Authorization": `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        amount: amount,
+        amount: invoice.amount,
         currency: "USD",
-        merchant_order_id: invoiceNumber,
-        description: description || `Invoice ${invoiceNumber}`,
-        return_url: `${req.headers.get("origin")}/invoices`,
+        merchant_order_id: invoice.invoice_number,
+        description: `Invoice ${invoice.invoice_number}`,
+        return_url: `${supabaseUrl.replace('https://', 'https://app.')}/invoices`,
       }),
     });
 
@@ -79,27 +123,38 @@ serve(async (req) => {
     const paymentLink = paymentLinkData.url;
     const paymentId = paymentLinkData.id;
 
-    // Update invoice with payment link
+    console.log('Payment link created:', paymentId);
+
+    // Calculate expiration (24 hours from now)
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    // Update invoice with payment link and idempotency key
     const { error: updateError } = await supabase
-      .from("invoices")
+      .from('invoices')
       .update({
         airwallex_payment_link: paymentLink,
         airwallex_payment_id: paymentId,
+        payment_link_id: paymentId,
+        link_created_at: new Date().toISOString(),
+        payment_link_expires_at: expiresAt.toISOString(),
       })
-      .eq("id", invoiceId);
+      .eq('id', invoice_id);
 
     if (updateError) {
-      console.error("Failed to update invoice:", updateError);
-      throw updateError;
+      console.error('Failed to update invoice with payment link:', updateError);
+      throw new Error('Failed to update invoice with payment link');
     }
 
-    console.log("Payment link generated successfully:", paymentLink);
+    console.log('Invoice updated with payment link successfully');
 
     return new Response(
       JSON.stringify({
         success: true,
         paymentLink,
         paymentId,
+        expiresAt: expiresAt.toISOString(),
+        isExisting: false,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

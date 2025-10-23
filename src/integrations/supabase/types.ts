@@ -120,8 +120,10 @@ export type Database = {
           address: string | null
           company_id: string
           contract_signed: boolean | null
+          contract_signed_at: string | null
           created_at: string
           docusign_envelope_id: string | null
+          docusign_status: string | null
           dot_number: string | null
           email: string | null
           id: string
@@ -136,8 +138,10 @@ export type Database = {
           address?: string | null
           company_id: string
           contract_signed?: boolean | null
+          contract_signed_at?: string | null
           created_at?: string
           docusign_envelope_id?: string | null
+          docusign_status?: string | null
           dot_number?: string | null
           email?: string | null
           id?: string
@@ -152,8 +156,10 @@ export type Database = {
           address?: string | null
           company_id?: string
           contract_signed?: boolean | null
+          contract_signed_at?: string | null
           created_at?: string
           docusign_envelope_id?: string | null
+          docusign_status?: string | null
           dot_number?: string | null
           email?: string | null
           id?: string
@@ -180,6 +186,8 @@ export type Database = {
           airwallex_account_id: string | null
           airwallex_api_key: string | null
           created_at: string
+          docusign_api_key: string | null
+          docusign_enabled: boolean | null
           email: string | null
           id: string
           name: string
@@ -192,6 +200,8 @@ export type Database = {
           airwallex_account_id?: string | null
           airwallex_api_key?: string | null
           created_at?: string
+          docusign_api_key?: string | null
+          docusign_enabled?: boolean | null
           email?: string | null
           id?: string
           name: string
@@ -204,6 +214,8 @@ export type Database = {
           airwallex_account_id?: string | null
           airwallex_api_key?: string | null
           created_at?: string
+          docusign_api_key?: string | null
+          docusign_enabled?: boolean | null
           email?: string | null
           id?: string
           name?: string
@@ -226,6 +238,7 @@ export type Database = {
           id: string
           load_id: string | null
           uploaded_by: string | null
+          uploaded_for: string | null
           visibility: string | null
         }
         Insert: {
@@ -240,6 +253,7 @@ export type Database = {
           id?: string
           load_id?: string | null
           uploaded_by?: string | null
+          uploaded_for?: string | null
           visibility?: string | null
         }
         Update: {
@@ -254,6 +268,7 @@ export type Database = {
           id?: string
           load_id?: string | null
           uploaded_by?: string | null
+          uploaded_for?: string | null
           visibility?: string | null
         }
         Relationships: [
@@ -375,9 +390,12 @@ export type Database = {
           id: string
           invoice_date: string
           invoice_number: string
+          link_created_at: string | null
           load_id: string | null
           notes: string | null
           payment_date: string | null
+          payment_link_expires_at: string | null
+          payment_link_id: string | null
           payment_status: string | null
           status: string
           updated_at: string
@@ -394,9 +412,12 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_number: string
+          link_created_at?: string | null
           load_id?: string | null
           notes?: string | null
           payment_date?: string | null
+          payment_link_expires_at?: string | null
+          payment_link_id?: string | null
           payment_status?: string | null
           status?: string
           updated_at?: string
@@ -413,9 +434,12 @@ export type Database = {
           id?: string
           invoice_date?: string
           invoice_number?: string
+          link_created_at?: string | null
           load_id?: string | null
           notes?: string | null
           payment_date?: string | null
+          payment_link_expires_at?: string | null
+          payment_link_id?: string | null
           payment_status?: string | null
           status?: string
           updated_at?: string
@@ -443,6 +467,7 @@ export type Database = {
           carrier_id: string | null
           commodity: string | null
           company_id: string
+          contract_signed: boolean | null
           created_at: string
           created_by: string | null
           delivery_city: string | null
@@ -463,6 +488,8 @@ export type Database = {
           pickup_state: string | null
           rate: number | null
           reference_number: string | null
+          sale_status: string | null
+          sales_agent_id: string | null
           sales_percentage: number | null
           sales_user_id: string | null
           status: Database["public"]["Enums"]["load_status"] | null
@@ -474,6 +501,7 @@ export type Database = {
           carrier_id?: string | null
           commodity?: string | null
           company_id: string
+          contract_signed?: boolean | null
           created_at?: string
           created_by?: string | null
           delivery_city?: string | null
@@ -494,6 +522,8 @@ export type Database = {
           pickup_state?: string | null
           rate?: number | null
           reference_number?: string | null
+          sale_status?: string | null
+          sales_agent_id?: string | null
           sales_percentage?: number | null
           sales_user_id?: string | null
           status?: Database["public"]["Enums"]["load_status"] | null
@@ -505,6 +535,7 @@ export type Database = {
           carrier_id?: string | null
           commodity?: string | null
           company_id?: string
+          contract_signed?: boolean | null
           created_at?: string
           created_by?: string | null
           delivery_city?: string | null
@@ -525,6 +556,8 @@ export type Database = {
           pickup_state?: string | null
           rate?: number | null
           reference_number?: string | null
+          sale_status?: string | null
+          sales_agent_id?: string | null
           sales_percentage?: number | null
           sales_user_id?: string | null
           status?: Database["public"]["Enums"]["load_status"] | null
@@ -558,6 +591,77 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loads_sales_agent_id_fkey"
+            columns: ["sales_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locations: {
+        Row: {
+          accuracy: number | null
+          company_id: string
+          created_at: string
+          driver_id: string
+          heading: number | null
+          id: string
+          latitude: number
+          load_id: string | null
+          longitude: number
+          speed: number | null
+          timestamp: string
+        }
+        Insert: {
+          accuracy?: number | null
+          company_id: string
+          created_at?: string
+          driver_id: string
+          heading?: number | null
+          id?: string
+          latitude: number
+          load_id?: string | null
+          longitude: number
+          speed?: number | null
+          timestamp?: string
+        }
+        Update: {
+          accuracy?: number | null
+          company_id?: string
+          created_at?: string
+          driver_id?: string
+          heading?: number | null
+          id?: string
+          latitude?: number
+          load_id?: string | null
+          longitude?: number
+          speed?: number | null
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locations_load_id_fkey"
+            columns: ["load_id"]
+            isOneToOne: false
+            referencedRelation: "loads"
             referencedColumns: ["id"]
           },
         ]
@@ -612,6 +716,50 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          link: string | null
+          message: string
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          link?: string | null
+          message: string
+          read?: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          link?: string | null
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -620,6 +768,7 @@ export type Database = {
           email_notifications: boolean | null
           first_name: string | null
           id: string
+          is_master_admin: boolean | null
           last_name: string | null
           notifications_enabled: boolean | null
           phone: string | null
@@ -634,6 +783,7 @@ export type Database = {
           email_notifications?: boolean | null
           first_name?: string | null
           id?: string
+          is_master_admin?: boolean | null
           last_name?: string | null
           notifications_enabled?: boolean | null
           phone?: string | null
@@ -648,6 +798,7 @@ export type Database = {
           email_notifications?: boolean | null
           first_name?: string | null
           id?: string
+          is_master_admin?: boolean | null
           last_name?: string | null
           notifications_enabled?: boolean | null
           phone?: string | null

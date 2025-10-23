@@ -14,3 +14,21 @@ verify_jwt = true
 
 [functions.docusign-send-contract]
 verify_jwt = true
+
+[functions.update-driver-location]
+verify_jwt = true
+
+[functions.invite-team-member]
+verify_jwt = true
+
+[functions.invite-driver]
+verify_jwt = true
+
+[functions.airwallex-webhook]
+verify_jwt = false
+
+[functions.send-docusign-contract]
+verify_jwt = true
+
+[functions.docusign-webhook]
+verify_jwt = false
