@@ -184,9 +184,7 @@ export type Database = {
         Row: {
           address: string | null
           airwallex_account_id: string | null
-          airwallex_api_key: string | null
           created_at: string
-          docusign_api_key: string | null
           docusign_enabled: boolean | null
           email: string | null
           id: string
@@ -198,9 +196,7 @@ export type Database = {
         Insert: {
           address?: string | null
           airwallex_account_id?: string | null
-          airwallex_api_key?: string | null
           created_at?: string
-          docusign_api_key?: string | null
           docusign_enabled?: boolean | null
           email?: string | null
           id?: string
@@ -212,9 +208,7 @@ export type Database = {
         Update: {
           address?: string | null
           airwallex_account_id?: string | null
-          airwallex_api_key?: string | null
           created_at?: string
-          docusign_api_key?: string | null
           docusign_enabled?: boolean | null
           email?: string | null
           id?: string

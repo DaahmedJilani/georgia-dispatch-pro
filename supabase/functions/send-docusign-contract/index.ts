@@ -39,10 +39,10 @@ serve(async (req) => {
 
     console.log('Sending DocuSign contract to carrier:', carrier_id);
 
-    // Get carrier and company info
+    // Get carrier info
     const { data: carrier, error: carrierError } = await supabase
       .from('carriers')
-      .select('*, company:companies(*)')
+      .select('*')
       .eq('id', carrier_id)
       .single();
 
@@ -55,14 +55,14 @@ serve(async (req) => {
       throw new Error('Contract already sent or completed');
     }
 
-    // Get DocuSign credentials (company-specific or global)
-    const docusignApiKey = carrier.company.docusign_api_key || Deno.env.get('DOCUSIGN_API_KEY');
+    // Get DocuSign credentials from environment (Supabase secrets)
+    const docusignApiKey = Deno.env.get('DOCUSIGN_API_KEY');
     
     if (!docusignApiKey) {
-      throw new Error('DocuSign API key not configured');
+      throw new Error('DocuSign API key not configured in environment');
     }
 
-    console.log('Using DocuSign credentials for company:', carrier.company.name);
+    console.log('Using DocuSign credentials from secure environment');
 
     // NOTE: This is a simplified mock implementation
     // In production, you would integrate with actual DocuSign API

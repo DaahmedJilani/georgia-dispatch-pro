@@ -3,21 +3,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Eye, EyeOff } from "lucide-react";
+import { Shield, AlertTriangle } from "lucide-react";
 
 interface AirwallexSettingsProps {
   companyId: string;
-  initialApiKey?: string;
   initialAccountId?: string;
 }
 
-const AirwallexSettings = ({ companyId, initialApiKey, initialAccountId }: AirwallexSettingsProps) => {
+const AirwallexSettings = ({ companyId, initialAccountId }: AirwallexSettingsProps) => {
   const { toast } = useToast();
-  const [apiKey, setApiKey] = useState(initialApiKey || "");
   const [accountId, setAccountId] = useState(initialAccountId || "");
-  const [showApiKey, setShowApiKey] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -27,7 +25,6 @@ const AirwallexSettings = ({ companyId, initialApiKey, initialAccountId }: Airwa
       const { error } = await supabase
         .from("companies")
         .update({
-          airwallex_api_key: apiKey,
           airwallex_account_id: accountId,
         })
         .eq("id", companyId);
@@ -36,7 +33,7 @@ const AirwallexSettings = ({ companyId, initialApiKey, initialAccountId }: Airwa
 
       toast({
         title: "Success",
-        description: "Airwallex credentials saved successfully",
+        description: "Airwallex account ID saved successfully",
       });
     } catch (error: any) {
       toast({
@@ -57,34 +54,18 @@ const AirwallexSettings = ({ companyId, initialApiKey, initialAccountId }: Airwa
           <CardTitle>Airwallex Integration</CardTitle>
         </div>
         <CardDescription>
-          Connect your Airwallex account to generate payment links for invoices
+          Configure your Airwallex account to generate payment links for invoices
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="airwallex_api_key">API Key</Label>
-          <div className="relative">
-            <Input
-              id="airwallex_api_key"
-              type={showApiKey ? "text" : "password"}
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your Airwallex API key"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="absolute right-0 top-0 h-full px-3"
-              onClick={() => setShowApiKey(!showApiKey)}
-            >
-              {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Your API key is encrypted and securely stored
-          </p>
-        </div>
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Security Notice:</strong> Airwallex API keys are now managed centrally by administrators 
+            via secure environment variables. This prevents unauthorized access to payment credentials.
+            Only the Account ID is stored here as a non-sensitive identifier.
+          </AlertDescription>
+        </Alert>
 
         <div className="space-y-2">
           <Label htmlFor="airwallex_account_id">Account ID</Label>
@@ -94,22 +75,29 @@ const AirwallexSettings = ({ companyId, initialApiKey, initialAccountId }: Airwa
             onChange={(e) => setAccountId(e.target.value)}
             placeholder="Enter your Airwallex Account ID"
           />
+          <p className="text-xs text-muted-foreground">
+            This is your Airwallex account identifier (not a secret key)
+          </p>
         </div>
 
         <div className="pt-2">
-          <Button onClick={handleSave} disabled={saving || !apiKey || !accountId}>
-            {saving ? "Saving..." : "Save Credentials"}
+          <Button onClick={handleSave} disabled={saving || !accountId}>
+            {saving ? "Saving..." : "Save Account ID"}
           </Button>
         </div>
 
-        <div className="mt-4 p-3 bg-muted rounded-lg text-sm">
-          <p className="font-medium mb-1">How to find your credentials:</p>
+        <div className="mt-4 p-3 bg-muted rounded-lg text-sm space-y-2">
+          <p className="font-medium">Configuration Instructions:</p>
           <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-            <li>Log into your Airwallex dashboard</li>
-            <li>Navigate to Settings → API Keys</li>
-            <li>Create or copy your API key</li>
-            <li>Find your Account ID in the account settings</li>
+            <li>Your administrator has configured the Airwallex API key securely</li>
+            <li>Find your Account ID in your Airwallex dashboard → Settings</li>
+            <li>Enter the Account ID above and click Save</li>
+            <li>Payment links will now be generated for your invoices</li>
           </ol>
+          <p className="text-xs text-muted-foreground pt-2">
+            <strong>Note:</strong> If you need to update the API key, contact your system administrator 
+            to update it in the secure environment configuration.
+          </p>
         </div>
       </CardContent>
     </Card>

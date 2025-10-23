@@ -24,10 +24,10 @@ serve(async (req) => {
     
     console.log('Generating payment link for invoice:', invoice_id);
 
-    // Fetch invoice details with company info
+    // Fetch invoice details
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
-      .select('*, company:companies(*)')
+      .select('*')
       .eq('id', invoice_id)
       .single();
 
@@ -63,16 +63,15 @@ serve(async (req) => {
       }
     }
 
-    // Use company-specific Airwallex credentials if available, otherwise fallback to global
-    const airwallexApiKey = invoice.company?.airwallex_api_key || Deno.env.get('AIRWALLEX_API_KEY');
-    const airwallexAccountId = invoice.company?.airwallex_account_id || Deno.env.get('AIRWALLEX_ACCOUNT_ID');
+    // Get Airwallex credentials from environment (Supabase secrets)
+    const airwallexApiKey = Deno.env.get('AIRWALLEX_API_KEY');
+    const airwallexAccountId = Deno.env.get('AIRWALLEX_ACCOUNT_ID');
 
     if (!airwallexApiKey || !airwallexAccountId) {
-      throw new Error('Airwallex credentials not configured');
+      throw new Error('Airwallex credentials not configured in environment');
     }
 
-    const usingCompanyCredentials = !!invoice.company?.airwallex_api_key;
-    console.log('Using', usingCompanyCredentials ? 'company-specific' : 'global', 'Airwallex credentials');
+    console.log('Using Airwallex credentials from secure environment');
 
     // Authenticate with Airwallex
     const authResponse = await fetch("https://api.airwallex.com/api/v1/authentication/login", {

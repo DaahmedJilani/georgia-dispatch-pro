@@ -14,7 +14,6 @@ const Settings = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [companyId, setCompanyId] = useState<string>("");
-  const [airwallexApiKey, setAirwallexApiKey] = useState<string>("");
   const [airwallexAccountId, setAirwallexAccountId] = useState<string>("");
   const [profile, setProfile] = useState({
     first_name: "",
@@ -74,7 +73,6 @@ const Settings = () => {
               phone: companyData.phone || "",
               address: companyData.address || "",
             });
-            setAirwallexApiKey(companyData.airwallex_api_key || "");
             setAirwallexAccountId(companyData.airwallex_account_id || "");
           }
         }
@@ -211,7 +209,6 @@ const Settings = () => {
             {companyId && (
               <AirwallexSettings
                 companyId={companyId}
-                initialApiKey={airwallexApiKey}
                 initialAccountId={airwallexAccountId}
               />
             )}
