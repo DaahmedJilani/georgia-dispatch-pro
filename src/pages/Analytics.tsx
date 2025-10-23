@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart3, TrendingUp, DollarSign, Truck, Users, Package } from "lucide-react";
+import { AnalyticsExport } from "@/components/analytics/AnalyticsExport";
 
 const Analytics = () => {
   const navigate = useNavigate();
@@ -170,9 +171,12 @@ const Analytics = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Analytics</h1>
-          <p className="text-muted-foreground">Business intelligence and performance metrics</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Analytics</h1>
+            <p className="text-muted-foreground">Business intelligence and performance metrics</p>
+          </div>
+          <AnalyticsExport analytics={analytics} />
         </div>
 
         {/* Key Metrics */}

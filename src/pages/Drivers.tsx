@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -13,9 +14,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateDriverDialog } from "@/components/drivers/CreateDriverDialog";
+import { DriverMapComponent } from "@/components/map/DriverMapComponent";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,12 +32,15 @@ import {
 const Drivers = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [drivers, setDrivers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [companyId, setCompanyId] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [driverToDelete, setDriverToDelete] = useState<string | null>(null);
+  const [selectedDriver, setSelectedDriver] = useState<any | null>(null);
+  const [mapDialogOpen, setMapDialogOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -179,6 +184,17 @@ const Drivers = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => {
+                            setSelectedDriver(driver);
+                            setMapDialogOpen(true);
+                          }}
+                          title="View Location"
+                        >
+                          <MapPin className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
                             setDriverToDelete(driver.id);
                             setDeleteDialogOpen(true);
                           }}
@@ -216,6 +232,23 @@ const Drivers = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={mapDialogOpen} onOpenChange={setMapDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Driver Location - {selectedDriver?.first_name} {selectedDriver?.last_name}
+            </DialogTitle>
+          </DialogHeader>
+          <DriverMapComponent
+            driverId={selectedDriver?.id || ""}
+            driverName={`${selectedDriver?.first_name} ${selectedDriver?.last_name}`}
+            latitude={selectedDriver?.current_location_lat ? parseFloat(selectedDriver.current_location_lat) : undefined}
+            longitude={selectedDriver?.current_location_lng ? parseFloat(selectedDriver.current_location_lng) : undefined}
+            lastUpdate={selectedDriver?.last_location_update}
+          />
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };

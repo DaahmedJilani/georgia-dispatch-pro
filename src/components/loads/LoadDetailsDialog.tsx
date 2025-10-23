@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { AIAssistDialog } from "@/components/ai/AIAssistDialog";
+import { LoadMapComponent } from "@/components/map/LoadMapComponent";
 
 interface LoadDetailsDialogProps {
   open: boolean;
@@ -181,8 +182,9 @@ const LoadDetailsDialog = ({ open, onOpenChange, loadId, onUpdate }: LoadDetails
         </DialogHeader>
 
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="map">Map</TabsTrigger>
             <TabsTrigger value="documents">Documents ({documents.length})</TabsTrigger>
             <TabsTrigger value="status">Status & Updates</TabsTrigger>
           </TabsList>
@@ -329,6 +331,15 @@ const LoadDetailsDialog = ({ open, onOpenChange, loadId, onUpdate }: LoadDetails
                 <p className="text-sm p-3 bg-muted rounded-lg">{load.notes}</p>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="map" className="mt-6">
+            <LoadMapComponent
+              loadId={load.id}
+              driverName={load.drivers ? `${load.drivers.first_name} ${load.drivers.last_name}` : undefined}
+              driverLat={load.drivers?.current_location_lat ? parseFloat(load.drivers.current_location_lat) : undefined}
+              driverLng={load.drivers?.current_location_lng ? parseFloat(load.drivers.current_location_lng) : undefined}
+            />
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-4 mt-6">
