@@ -18,9 +18,11 @@ import {
   DollarSign,
   MapPin,
   Navigation,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import fleetLogo from "@/assets/fleet-logo.png";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -33,6 +35,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
+  const { role, isMasterAdmin } = useUserRole();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -76,19 +79,84 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     navigate("/auth");
   };
 
-  const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-    { icon: Package, label: "Loads", path: "/loads" },
-    { icon: Truck, label: "Drivers", path: "/drivers" },
-    { icon: Users, label: "Brokers", path: "/brokers" },
-    { icon: Building2, label: "Carriers", path: "/carriers" },
-    { icon: FileText, label: "Documents", path: "/documents" },
-    { icon: DollarSign, label: "Invoices", path: "/invoices" },
-    { icon: MapPin, label: "Live Map", path: "/map" },
-    { icon: Navigation, label: "Driver Portal", path: "/driver-portal" },
-    { icon: BarChart3, label: "Analytics", path: "/analytics" },
-    { icon: Settings, label: "Settings", path: "/settings" },
-  ];
+  // Role-based navigation items
+  const getNavItems = () => {
+    const baseItems = [
+      { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", roles: ['admin', 'sales', 'dispatcher', 'treasury'] },
+    ];
+
+    // Master Admin gets everything plus Companies
+    if (isMasterAdmin) {
+      return [
+        { icon: LayoutDashboard, label: "Master Admin", path: "/master-admin", roles: [] },
+        { icon: Building2, label: "Companies", path: "/companies", roles: [] },
+        { icon: Package, label: "Loads", path: "/loads", roles: [] },
+        { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
+        { icon: Users, label: "Brokers", path: "/brokers", roles: [] },
+        { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
+        { icon: FileText, label: "Documents", path: "/documents", roles: [] },
+        { icon: DollarSign, label: "Invoices", path: "/invoices", roles: [] },
+        { icon: BarChart3, label: "Analytics", path: "/analytics", roles: [] },
+        { icon: Settings, label: "Settings", path: "/settings", roles: [] },
+      ];
+    }
+
+    // Admin gets team management
+    if (role === 'admin') {
+      return [
+        { icon: LayoutDashboard, label: "Dashboard", path: "/admin-dashboard", roles: [] },
+        { icon: UserCog, label: "Team", path: "/team", roles: [] },
+        { icon: Package, label: "Loads", path: "/loads", roles: [] },
+        { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
+        { icon: Users, label: "Brokers", path: "/brokers", roles: [] },
+        { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
+        { icon: FileText, label: "Documents", path: "/documents", roles: [] },
+        { icon: DollarSign, label: "Invoices", path: "/invoices", roles: [] },
+        { icon: BarChart3, label: "Analytics", path: "/analytics", roles: [] },
+        { icon: Settings, label: "Settings", path: "/settings", roles: [] },
+      ];
+    }
+
+    // Sales Agent
+    if (role === 'sales') {
+      return [
+        { icon: LayoutDashboard, label: "Dashboard", path: "/sales-dashboard", roles: [] },
+        { icon: Package, label: "My Loads", path: "/loads", roles: [] },
+        { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
+        { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
+        { icon: FileText, label: "Documents", path: "/documents", roles: [] },
+        { icon: BarChart3, label: "My Performance", path: "/analytics", roles: [] },
+        { icon: Settings, label: "Settings", path: "/settings", roles: [] },
+      ];
+    }
+
+    // Dispatcher
+    if (role === 'dispatcher') {
+      return [
+        { icon: LayoutDashboard, label: "Dashboard", path: "/dispatch-dashboard", roles: [] },
+        { icon: Package, label: "Loads", path: "/loads", roles: [] },
+        { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
+        { icon: MapPin, label: "Map", path: "/map", roles: [] },
+        { icon: FileText, label: "Documents", path: "/documents", roles: [] },
+        { icon: Settings, label: "Settings", path: "/settings", roles: [] },
+      ];
+    }
+
+    // Treasury
+    if (role === 'treasury') {
+      return [
+        { icon: LayoutDashboard, label: "Dashboard", path: "/treasury-dashboard", roles: [] },
+        { icon: DollarSign, label: "Invoices", path: "/invoices", roles: [] },
+        { icon: BarChart3, label: "Reports", path: "/analytics", roles: [] },
+        { icon: Settings, label: "Settings", path: "/settings", roles: [] },
+      ];
+    }
+
+    // Default fallback
+    return baseItems;
+  };
+
+  const navItems = getNavItems();
 
   if (loading) {
     return (

@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, Truck, Users, DollarSign, TrendingUp, Clock } from "lucide-react";
 import { WIPPanel } from "@/components/wip/WIPPanel";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const { role, isMasterAdmin, loading: roleLoading } = useUserRole();
   const [stats, setStats] = useState({
     totalLoads: 0,
     activeLoads: 0,
@@ -14,6 +18,23 @@ const Dashboard = () => {
   });
   const [recentLoads, setRecentLoads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Redirect to role-specific dashboard
+  useEffect(() => {
+    if (!roleLoading && (role || isMasterAdmin)) {
+      if (isMasterAdmin) {
+        navigate('/master-admin', { replace: true });
+      } else if (role === 'admin') {
+        navigate('/admin-dashboard', { replace: true });
+      } else if (role === 'sales') {
+        navigate('/sales-dashboard', { replace: true });
+      } else if (role === 'dispatcher') {
+        navigate('/dispatch-dashboard', { replace: true });
+      } else if (role === 'treasury') {
+        navigate('/treasury-dashboard', { replace: true });
+      }
+    }
+  }, [role, isMasterAdmin, roleLoading, navigate]);
 
   useEffect(() => {
     fetchDashboardData();
