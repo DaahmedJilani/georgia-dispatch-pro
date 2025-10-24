@@ -6,8 +6,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Navigation, Upload, Clock, Check, X } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MapPin, Upload, Clock, Check, X, Radio } from "lucide-react";
+import { GPSConsentDialog } from "@/components/map/GPSConsentDialog";
+import { DriverLocationCard } from "@/components/map/DriverLocationCard";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const DriverPortal = () => {
   const navigate = useNavigate();
@@ -16,18 +18,70 @@ const DriverPortal = () => {
   const [driverId, setDriverId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [trackingLocation, setTrackingLocation] = useState(false);
+  const [showGPSConsent, setShowGPSConsent] = useState(false);
+  const [gpsConsent, setGpsConsent] = useState(false);
+  const [driverLocation, setDriverLocation] = useState<{
+    lat: number | null;
+    lng: number | null;
+    lastUpdate: string | null;
+  }>({ lat: null, lng: null, lastUpdate: null });
+  const [driverName, setDriverName] = useState("");
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   useEffect(() => {
     checkAuth();
     fetchDriverLoads();
-    startLocationTracking();
+    checkGPSConsent();
   }, []);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
+    }
+  };
+
+  const checkGPSConsent = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: driverData } = await supabase
+        .from("drivers")
+        .select("id, first_name, last_name, current_location_lat, current_location_lng, last_location_update")
+        .eq("user_id", user.id)
+        .single();
+
+      if (driverData) {
+        setDriverId(driverData.id);
+        setDriverName(`${driverData.first_name} ${driverData.last_name}`);
+        
+        // For now, check if location tracking was already enabled
+        const hasLocation = !!(driverData.current_location_lat && driverData.current_location_lng);
+        setGpsConsent(hasLocation);
+        setDriverLocation({
+          lat: driverData.current_location_lat,
+          lng: driverData.current_location_lng,
+          lastUpdate: driverData.last_location_update,
+        });
+
+        if (!hasLocation) {
+          setShowGPSConsent(true);
+        } else {
+          startLocationTracking();
+        }
+      }
+    } catch (error: any) {
+      console.error("GPS consent check error:", error);
+    }
+  };
+
+  const handleGPSConsentResponse = (granted: boolean) => {
+    setShowGPSConsent(false);
+    setGpsConsent(granted);
+    
+    if (granted) {
+      startLocationTracking();
     }
   };
 
@@ -85,39 +139,65 @@ const DriverPortal = () => {
       return;
     }
 
+    if (!gpsConsent) {
+      console.log("GPS consent not granted");
+      return;
+    }
+
     setTrackingLocation(true);
 
-    // Update location every 5 minutes
+    // Update location immediately
+    updateDriverLocation();
+
+    // Update location every 2 minutes
     const interval = setInterval(() => {
       updateDriverLocation();
-    }, 300000);
-
-    // Initial update
-    updateDriverLocation();
+    }, 120000); // 2 minutes
 
     return () => clearInterval(interval);
   };
 
   const updateDriverLocation = () => {
+    if (!driverId) return;
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        if (!driverId) return;
+        try {
+          const { latitude, longitude, accuracy, heading, speed } = position.coords;
+          
+          // Call edge function for proper RLS handling
+          const { data, error } = await supabase.functions.invoke('update-driver-location', {
+            body: {
+              driver_id: driverId,
+              latitude,
+              longitude,
+              accuracy,
+              heading,
+              speed,
+            },
+          });
 
-        const { error } = await supabase
-          .from("drivers")
-          .update({
-            current_location_lat: position.coords.latitude,
-            current_location_lng: position.coords.longitude,
-            last_location_update: new Date().toISOString(),
-          })
-          .eq("id", driverId);
+          if (error) throw error;
 
-        if (error) {
-          console.error("Failed to update location:", error);
+          setDriverLocation({
+            lat: latitude,
+            lng: longitude,
+            lastUpdate: new Date().toISOString(),
+          });
+
+          console.log("Location updated successfully");
+        } catch (error: any) {
+          console.error("Error updating location:", error);
         }
       },
       (error) => {
         console.error("Geolocation error:", error);
+        setTrackingLocation(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0,
       }
     );
   };
@@ -246,6 +326,12 @@ const DriverPortal = () => {
 
   return (
     <DashboardLayout>
+      <GPSConsentDialog
+        open={showGPSConsent}
+        onConsent={handleGPSConsentResponse}
+        driverId={driverId || ""}
+      />
+      
       <div className="space-y-6 max-w-4xl mx-auto">
         <div className="flex justify-between items-center">
           <div>
@@ -253,12 +339,29 @@ const DriverPortal = () => {
             <p className="text-muted-foreground">Manage your assigned loads</p>
           </div>
           {trackingLocation && (
-            <div className="flex items-center gap-2 text-sm text-green-600">
-              <Navigation className="w-4 h-4 animate-pulse" />
-              <span>Location tracking active</span>
-            </div>
+            <Badge variant="outline" className="gap-2">
+              <Radio className="w-4 h-4 animate-pulse" />
+              GPS Active
+            </Badge>
           )}
         </div>
+
+        {!gpsConsent && (
+          <Alert>
+            <AlertDescription>
+              Location sharing is off — your dispatcher cannot track you. Enable GPS tracking to allow real-time location updates.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {gpsConsent && (
+          <DriverLocationCard
+            latitude={driverLocation.lat}
+            longitude={driverLocation.lng}
+            lastUpdate={driverLocation.lastUpdate}
+            driverName={driverName}
+          />
+        )}
 
         {loading ? (
           <Card className="p-8">

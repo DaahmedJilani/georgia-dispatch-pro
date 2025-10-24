@@ -136,7 +136,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         { icon: LayoutDashboard, label: "Dashboard", path: "/dispatch-dashboard", roles: [] },
         { icon: Package, label: "Loads", path: "/loads", roles: [] },
         { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
-        { icon: MapPin, label: "Map", path: "/map", roles: [] },
+        { icon: Navigation, label: "Fleet Map", path: "/fleet-map", roles: [] },
         { icon: FileText, label: "Documents", path: "/documents", roles: [] },
         { icon: Settings, label: "Settings", path: "/settings", roles: [] },
       ];

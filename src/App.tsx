@@ -19,7 +19,7 @@ import Brokers from "./pages/Brokers";
 import Carriers from "./pages/Carriers";
 import Documents from "./pages/Documents";
 import Invoices from "./pages/Invoices";
-import Map from "./pages/Map";
+import FleetMap from "./pages/FleetMap";
 import DriverPortal from "./pages/DriverPortal";
 import CarrierPortal from "./pages/CarrierPortal";
 import Analytics from "./pages/Analytics";
@@ -58,7 +58,14 @@ const App = () => (
           <Route path="/carriers" element={<Carriers />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/invoices" element={<Invoices />} />
-          <Route path="/map" element={<Map />} />
+          <Route 
+            path="/fleet-map" 
+            element={
+              <RoleGuard allowedRoles={['admin', 'dispatcher']}>
+                <FleetMap />
+              </RoleGuard>
+            } 
+          />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
           
