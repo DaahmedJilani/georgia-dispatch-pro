@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, TruckIcon, DollarSign } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { SeedTestUsersButton } from '@/components/admin/SeedTestUsersButton';
 
 interface CompanyStats {
   id: string;
@@ -94,9 +95,12 @@ export default function MasterAdminDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Master Admin Dashboard</h1>
-          <p className="text-muted-foreground">System-wide overview and company management</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Master Admin Dashboard</h1>
+            <p className="text-muted-foreground">System-wide overview and company management</p>
+          </div>
+          <SeedTestUsersButton />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
