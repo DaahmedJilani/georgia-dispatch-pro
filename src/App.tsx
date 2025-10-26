@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { InstallPrompt } from "./components/pwa/InstallPrompt";
+import { NotificationPermissionPrompt } from "./components/notifications/NotificationPermissionPrompt";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -23,6 +25,7 @@ import FleetMap from "./pages/FleetMap";
 import DriverPortal from "./pages/DriverPortal";
 import CarrierPortal from "./pages/CarrierPortal";
 import Analytics from "./pages/Analytics";
+import AuditLogs from "./pages/AuditLogs";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { RoleGuard } from "./components/RoleGuard";
@@ -34,6 +37,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <InstallPrompt />
+      <NotificationPermissionPrompt />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -67,6 +72,14 @@ const App = () => (
             } 
           />
           <Route path="/analytics" element={<Analytics />} />
+          <Route 
+            path="/audit-logs" 
+            element={
+              <RoleGuard allowedRoles={['admin']}>
+                <AuditLogs />
+              </RoleGuard>
+            } 
+          />
           <Route path="/settings" element={<Settings />} />
           
           {/* Portals */}

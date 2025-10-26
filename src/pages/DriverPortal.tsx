@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Upload, Clock, Check, X, Radio, History, Package } from "lucide-react";
+import { PerformanceMetrics } from "@/components/driver/PerformanceMetrics";
 import { GPSConsentDialog } from "@/components/map/GPSConsentDialog";
 import { DriverLocationCard } from "@/components/map/DriverLocationCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { notificationService } from "@/services/NotificationService";
 
 const DriverPortal = () => {
   const navigate = useNavigate();
@@ -19,6 +21,13 @@ const DriverPortal = () => {
   const [driverId, setDriverId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
+  const [performanceMetrics, setPerformanceMetrics] = useState({
+    totalLoads: 0,
+    onTimeDeliveries: 0,
+    totalEarnings: 0,
+    averageDeliveryTime: 0,
+    loadsThisMonth: 0,
+  });
   const [trackingLocation, setTrackingLocation] = useState(false);
   const [showGPSConsent, setShowGPSConsent] = useState(false);
   const [gpsConsent, setGpsConsent] = useState(false);
@@ -34,7 +43,25 @@ const DriverPortal = () => {
     checkAuth();
     fetchDriverLoads();
     checkGPSConsent();
-  }, []);
+
+    // Subscribe to load assignment notifications
+    if (driverId) {
+      const channel = notificationService.subscribeToDriverLoadAssignments(
+        driverId,
+        (newLoad) => {
+          toast({
+            title: "New Load Assigned!",
+            description: `Load ${newLoad.load_number} has been assigned to you`,
+          });
+          fetchDriverLoads(); // Refresh loads list
+        }
+      );
+
+      return () => {
+        notificationService.unsubscribe(channel);
+      };
+    }
+  }, [driverId]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -139,6 +166,49 @@ const DriverPortal = () => {
         .limit(20);
 
       setLoadHistory(historyData || []);
+
+      // Calculate performance metrics
+      const allDeliveredLoads = historyData || [];
+      const totalDelivered = allDeliveredLoads.length;
+      
+      // Calculate on-time deliveries (delivered before or on delivery_date)
+      const onTime = allDeliveredLoads.filter(load => {
+        if (!load.delivery_date || !load.updated_at) return false;
+        return new Date(load.updated_at) <= new Date(load.delivery_date);
+      }).length;
+
+      // Calculate total earnings from delivered loads
+      const earnings = allDeliveredLoads.reduce((sum, load) => sum + (load.rate || 0), 0);
+
+      // Calculate average delivery time
+      const deliveryTimes = allDeliveredLoads
+        .filter(load => load.pickup_date && load.delivery_date)
+        .map(load => {
+          const pickup = new Date(load.pickup_date).getTime();
+          const delivery = new Date(load.delivery_date).getTime();
+          return (delivery - pickup) / (1000 * 60 * 60); // hours
+        });
+      
+      const avgTime = deliveryTimes.length > 0
+        ? Math.round(deliveryTimes.reduce((sum, t) => sum + t, 0) / deliveryTimes.length)
+        : 0;
+
+      // Calculate loads this month
+      const now = new Date();
+      const thisMonth = allDeliveredLoads.filter(load => {
+        if (!load.delivery_date) return false;
+        const deliveryDate = new Date(load.delivery_date);
+        return deliveryDate.getMonth() === now.getMonth() && 
+               deliveryDate.getFullYear() === now.getFullYear();
+      }).length;
+
+      setPerformanceMetrics({
+        totalLoads: totalDelivered,
+        onTimeDeliveries: onTime,
+        totalEarnings: earnings,
+        averageDeliveryTime: avgTime,
+        loadsThisMonth: thisMonth,
+      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -365,7 +435,16 @@ const DriverPortal = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Performance Metrics Dashboard */}
+        <PerformanceMetrics
+          totalLoads={performanceMetrics.totalLoads}
+          onTimeDeliveries={performanceMetrics.onTimeDeliveries}
+          totalEarnings={performanceMetrics.totalEarnings}
+          averageDeliveryTime={performanceMetrics.averageDeliveryTime}
+          loadsThisMonth={performanceMetrics.loadsThisMonth}
+        />
+
+        {/* Quick Stats */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card className="glass-card">
             <CardContent className="pt-6">

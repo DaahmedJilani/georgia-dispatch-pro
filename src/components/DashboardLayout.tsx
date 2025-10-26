@@ -19,6 +19,7 @@ import {
   MapPin,
   Navigation,
   UserCog,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import fleetLogo from "@/assets/fleet-logo.png";
@@ -97,6 +98,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         { icon: FileText, label: "Documents", path: "/documents", roles: [] },
         { icon: DollarSign, label: "Invoices", path: "/invoices", roles: [] },
         { icon: BarChart3, label: "Analytics", path: "/analytics", roles: [] },
+        { icon: Shield, label: "Audit Logs", path: "/audit-logs", roles: [] },
         { icon: Settings, label: "Settings", path: "/settings", roles: [] },
       ];
     }
@@ -113,6 +115,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         { icon: FileText, label: "Documents", path: "/documents", roles: [] },
         { icon: DollarSign, label: "Invoices", path: "/invoices", roles: [] },
         { icon: BarChart3, label: "Analytics", path: "/analytics", roles: [] },
+        { icon: Shield, label: "Audit Logs", path: "/audit-logs", roles: [] },
         { icon: Settings, label: "Settings", path: "/settings", roles: [] },
       ];
     }

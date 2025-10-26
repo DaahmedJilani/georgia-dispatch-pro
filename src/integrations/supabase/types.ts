@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          changes: Json | null
+          company_id: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          ip_address: string | null
+          new_data: Json | null
+          old_data: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          company_id: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          company_id?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brokers: {
         Row: {
           address: string | null
