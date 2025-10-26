@@ -716,6 +716,70 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          body: string
+          company_id: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          load_id: string | null
+          parent_message_id: string | null
+          recipient_id: string
+          sender_id: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          company_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          load_id?: string | null
+          parent_message_id?: string | null
+          recipient_id: string
+          sender_id: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          load_id?: string | null
+          parent_message_id?: string | null
+          recipient_id?: string
+          sender_id?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_load_id_fkey"
+            columns: ["load_id"]
+            isOneToOne: false
+            referencedRelation: "loads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notes: {
         Row: {
           author_id: string
@@ -823,6 +887,8 @@ export type Database = {
           notifications_enabled: boolean | null
           phone: string | null
           sms_notifications: boolean | null
+          two_factor_enabled: boolean | null
+          two_factor_method: string | null
           updated_at: string
           user_id: string
         }
@@ -838,6 +904,8 @@ export type Database = {
           notifications_enabled?: boolean | null
           phone?: string | null
           sms_notifications?: boolean | null
+          two_factor_enabled?: boolean | null
+          two_factor_method?: string | null
           updated_at?: string
           user_id: string
         }
@@ -853,6 +921,8 @@ export type Database = {
           notifications_enabled?: boolean | null
           phone?: string | null
           sms_notifications?: boolean | null
+          two_factor_enabled?: boolean | null
+          two_factor_method?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -865,6 +935,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      two_factor_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          method: string
+          used: boolean | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          method: string
+          used?: boolean | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          method?: string
+          used?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

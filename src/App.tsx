@@ -26,6 +26,7 @@ import DriverPortal from "./pages/DriverPortal";
 import CarrierPortal from "./pages/CarrierPortal";
 import Analytics from "./pages/Analytics";
 import AuditLogs from "./pages/AuditLogs";
+import Messages from "./pages/Messages";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { RoleGuard } from "./components/RoleGuard";
@@ -72,6 +73,7 @@ const App = () => (
             } 
           />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/messages" element={<Messages />} />
           <Route 
             path="/audit-logs" 
             element={
