@@ -26,8 +26,22 @@ export const GPSConsentDialog = ({ open, onConsent, driverId }: GPSConsentDialog
     setLoading(true);
     
     try {
-      // Note: gps_consent field will be available after migration
-      // For now we'll just handle permission request
+      // Save consent to database
+      const { error: updateError } = await supabase
+        .from('drivers')
+        .update({ gps_consent: granted })
+        .eq('id', driverId);
+
+      if (updateError) {
+        console.error('Failed to save GPS consent:', updateError);
+        toast({
+          title: "Error",
+          description: "Failed to save consent preference",
+          variant: "destructive",
+        });
+        onConsent(false);
+        return;
+      }
 
       if (granted) {
         // Request geolocation permission

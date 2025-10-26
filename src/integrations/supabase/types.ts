@@ -305,6 +305,7 @@ export type Database = {
           current_location_lng: number | null
           email: string | null
           first_name: string
+          gps_consent: boolean | null
           id: string
           last_location_update: string | null
           last_name: string
@@ -324,6 +325,7 @@ export type Database = {
           current_location_lng?: number | null
           email?: string | null
           first_name: string
+          gps_consent?: boolean | null
           id?: string
           last_location_update?: string | null
           last_name: string
@@ -343,6 +345,7 @@ export type Database = {
           current_location_lng?: number | null
           email?: string | null
           first_name?: string
+          gps_consent?: boolean | null
           id?: string
           last_location_update?: string | null
           last_name?: string

@@ -48,7 +48,7 @@ const DriverPortal = () => {
 
       const { data: driverData } = await supabase
         .from("drivers")
-        .select("id, first_name, last_name, current_location_lat, current_location_lng, last_location_update")
+        .select("id, first_name, last_name, gps_consent, current_location_lat, current_location_lng, last_location_update")
         .eq("user_id", user.id)
         .single();
 
@@ -56,16 +56,16 @@ const DriverPortal = () => {
         setDriverId(driverData.id);
         setDriverName(`${driverData.first_name} ${driverData.last_name}`);
         
-        // For now, check if location tracking was already enabled
-        const hasLocation = !!(driverData.current_location_lat && driverData.current_location_lng);
-        setGpsConsent(hasLocation);
+        // Check GPS consent from database field
+        const hasGpsConsent = driverData.gps_consent || false;
+        setGpsConsent(hasGpsConsent);
         setDriverLocation({
           lat: driverData.current_location_lat,
           lng: driverData.current_location_lng,
           lastUpdate: driverData.last_location_update,
         });
 
-        if (!hasLocation) {
+        if (!hasGpsConsent) {
           setShowGPSConsent(true);
         } else {
           startLocationTracking();
