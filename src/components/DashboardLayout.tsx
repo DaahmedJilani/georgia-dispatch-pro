@@ -21,6 +21,7 @@ import {
   UserCog,
   Shield,
   MessageCircle,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import fleetLogo from "@/assets/fleet-logo.png";

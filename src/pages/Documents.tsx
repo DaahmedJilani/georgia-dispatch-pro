@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Download, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentUploadDialog } from "@/components/documents/DocumentUploadDialog";
+import { PODExtractor } from "@/components/documents/PODExtractor";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,7 @@ const Documents = () => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<any>(null);
+  const [selectedDocForExtraction, setSelectedDocForExtraction] = useState<any>(null);
 
   useEffect(() => {
     checkAuth();
@@ -173,6 +175,7 @@ const Documents = () => {
                 <TableHead>Size</TableHead>
                 <TableHead>Uploaded</TableHead>
                 <TableHead>Actions</TableHead>
+                <TableHead>Extract Data</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -184,7 +187,7 @@ const Documents = () => {
                 </TableRow>
               ) : documents.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
+                  <TableCell colSpan={6} className="text-center">
                     No documents found
                   </TableCell>
                 </TableRow>
@@ -220,6 +223,17 @@ const Documents = () => {
                         </Button>
                       </div>
                     </TableCell>
+                    <TableCell>
+                      {doc.document_type === 'pod' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedDocForExtraction(doc)}
+                        >
+                          Extract Data
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -249,6 +263,13 @@ const Documents = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {selectedDocForExtraction && (
+        <PODExtractor
+          documentId={selectedDocForExtraction.id}
+          fileUrl={selectedDocForExtraction.file_path}
+        />
+      )}
     </DashboardLayout>
   );
 };

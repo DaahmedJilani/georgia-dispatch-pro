@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import AirwallexSettings from "@/components/settings/AirwallexSettings";
+import { TwoFactorSetup } from "@/components/auth/TwoFactorSetup";
+import { AnalyticsExport } from "@/components/analytics/AnalyticsExport";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -15,6 +17,8 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [companyId, setCompanyId] = useState<string>("");
   const [airwallexAccountId, setAirwallexAccountId] = useState<string>("");
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [twoFactorMethod, setTwoFactorMethod] = useState("sms");
   const [profile, setProfile] = useState({
     first_name: "",
     last_name: "",
@@ -56,6 +60,8 @@ const Settings = () => {
           last_name: profileData.last_name || "",
           phone: profileData.phone || "",
         });
+        setTwoFactorEnabled(profileData.two_factor_enabled || false);
+        setTwoFactorMethod(profileData.two_factor_method || "sms");
 
         if (profileData.company_id) {
           setCompanyId(profileData.company_id);
@@ -204,6 +210,16 @@ const Settings = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <TwoFactorSetup
+                enabled={twoFactorEnabled}
+                method={twoFactorMethod}
+                onUpdate={fetchSettings}
+              />
+
+              <AnalyticsExport />
             </div>
 
             {companyId && (

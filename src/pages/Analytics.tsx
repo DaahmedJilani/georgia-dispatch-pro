@@ -176,7 +176,7 @@ const Analytics = () => {
             <h1 className="text-3xl font-bold">Analytics</h1>
             <p className="text-muted-foreground">Business intelligence and performance metrics</p>
           </div>
-          <AnalyticsExport analytics={analytics} />
+          <AnalyticsExport />
         </div>
 
         {/* Key Metrics */}

@@ -35,3 +35,12 @@ verify_jwt = true
 
 [functions.docusign-webhook]
 verify_jwt = false
+
+[functions.send-2fa-code]
+verify_jwt = true
+
+[functions.verify-2fa-code]
+verify_jwt = true
+
+[functions.extract-pod-data]
+verify_jwt = true
