@@ -2,11 +2,11 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Upload, Clock, Check, X, Radio } from "lucide-react";
+import { MapPin, Upload, Clock, Check, X, Radio, History, Package } from "lucide-react";
 import { GPSConsentDialog } from "@/components/map/GPSConsentDialog";
 import { DriverLocationCard } from "@/components/map/DriverLocationCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -15,8 +15,10 @@ const DriverPortal = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loads, setLoads] = useState<any[]>([]);
+  const [loadHistory, setLoadHistory] = useState<any[]>([]);
   const [driverId, setDriverId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
   const [trackingLocation, setTrackingLocation] = useState(false);
   const [showGPSConsent, setShowGPSConsent] = useState(false);
   const [gpsConsent, setGpsConsent] = useState(false);
@@ -109,6 +111,7 @@ const DriverPortal = () => {
 
       setDriverId(driver.id);
 
+      // Fetch active loads
       const { data, error } = await supabase
         .from("loads")
         .select(`
@@ -122,6 +125,20 @@ const DriverPortal = () => {
 
       if (error) throw error;
       setLoads(data || []);
+
+      // Fetch completed loads history
+      const { data: historyData } = await supabase
+        .from("loads")
+        .select(`
+          *,
+          brokers(name, company_name, phone)
+        `)
+        .eq("driver_id", driver.id)
+        .eq("status", "delivered")
+        .order("delivery_date", { ascending: false })
+        .limit(20);
+
+      setLoadHistory(historyData || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -338,12 +355,51 @@ const DriverPortal = () => {
             <h1 className="text-3xl font-bold">Driver Portal</h1>
             <p className="text-muted-foreground">Manage your assigned loads</p>
           </div>
-          {trackingLocation && (
-            <Badge variant="outline" className="gap-2">
-              <Radio className="w-4 h-4 animate-pulse" />
-              GPS Active
-            </Badge>
-          )}
+          <div className="flex items-center gap-3">
+            {trackingLocation && (
+              <Badge variant="outline" className="gap-2">
+                <Radio className="w-4 h-4 animate-pulse" />
+                GPS Active
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card className="glass-card">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Loads</p>
+                  <p className="text-3xl font-bold">{loads.length}</p>
+                </div>
+                <Package className="w-8 h-8 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="glass-card">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Completed</p>
+                  <p className="text-3xl font-bold">{loadHistory.length}</p>
+                </div>
+                <History className="w-8 h-8 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="glass-card">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">All Time Loads</p>
+                  <p className="text-3xl font-bold">{loads.length + loadHistory.length}</p>
+                </div>
+                <MapPin className="w-8 h-8 text-purple-500" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {!gpsConsent && (
@@ -363,17 +419,23 @@ const DriverPortal = () => {
           />
         )}
 
-        {loading ? (
-          <Card className="p-8">
-            <p className="text-center text-muted-foreground">Loading your loads...</p>
-          </Card>
-        ) : loads.length === 0 ? (
-          <Card className="p-8">
-            <p className="text-center text-muted-foreground">No active loads assigned to you</p>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {loads.map((load) => (
+        {/* Active Loads Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Active Loads</h2>
+          </div>
+          
+          {loading ? (
+            <Card className="p-8">
+              <p className="text-center text-muted-foreground">Loading your loads...</p>
+            </Card>
+          ) : loads.length === 0 ? (
+            <Card className="p-8">
+              <p className="text-center text-muted-foreground">No active loads assigned to you</p>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {loads.map((load) => (
               <Card key={load.id} className="p-6">
                 <div className="space-y-4">
                   <div className="flex justify-between items-start">
@@ -492,9 +554,97 @@ const DriverPortal = () => {
                   </div>
                 </div>
               </Card>
-            ))}
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Load History Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <History className="w-5 h-5" />
+              Load History
+            </h2>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowHistory(!showHistory)}
+            >
+              {showHistory ? 'Hide' : 'Show'} History
+            </Button>
           </div>
-        )}
+
+          {showHistory && (
+            loadHistory.length === 0 ? (
+              <Card className="p-8">
+                <p className="text-center text-muted-foreground">No completed loads yet</p>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {loadHistory.map((load) => (
+                  <Card key={load.id} className="p-6 opacity-80">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xl font-semibold">{load.load_number}</h3>
+                          <p className="text-sm text-muted-foreground">{load.commodity || 'General Freight'}</p>
+                        </div>
+                        <Badge className="bg-green-500">DELIVERED</Badge>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-4 h-4 text-blue-500 mt-1" />
+                            <div>
+                              <p className="font-medium">Pickup</p>
+                              <p className="text-sm text-muted-foreground">
+                                {load.pickup_city}, {load.pickup_state}
+                              </p>
+                              {load.pickup_date && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                  <Clock className="w-3 h-3" />
+                                  {new Date(load.pickup_date).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-4 h-4 text-green-500 mt-1" />
+                            <div>
+                              <p className="font-medium">Delivery</p>
+                              <p className="text-sm text-muted-foreground">
+                                {load.delivery_city}, {load.delivery_state}
+                              </p>
+                              {load.delivery_date && (
+                                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                  <Clock className="w-3 h-3" />
+                                  {new Date(load.delivery_date).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {load.brokers && (
+                        <div className="pt-2 border-t">
+                          <p className="text-sm">
+                            <span className="font-medium">Broker:</span> {load.brokers.name}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );
