@@ -7,6 +7,20 @@ interface RoleGuardProps {
   children: ReactNode;
 }
 
+/**
+ * RoleGuard Component - Client-side Route Protection
+ * 
+ * SECURITY NOTE: This component provides UI-level route protection for user experience.
+ * It is NOT a security boundary. Actual data access is protected by:
+ * - Row Level Security (RLS) policies on all database tables
+ * - Server-side JWT verification in Edge Functions (verify_jwt = true)
+ * 
+ * An attacker could bypass this client-side check by manipulating the browser,
+ * but they still cannot access unauthorized data due to server-side protections.
+ * 
+ * This component is safe to use for routing decisions and improves UX by showing
+ * appropriate content, but never rely on it for authorization decisions.
+ */
 export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   const { role, isMasterAdmin, loading } = useUserRole();
 

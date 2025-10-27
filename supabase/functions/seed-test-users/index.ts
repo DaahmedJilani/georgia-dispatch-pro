@@ -5,9 +5,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Generate a random secure password
+function generateSecurePassword(): string {
+  const length = 16;
+  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  let password = '';
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  for (let i = 0; i < length; i++) {
+    password += charset[array[i] % charset.length];
+  }
+  return password;
+}
+
 interface TestUser {
   email: string;
-  password: string;
   firstName: string;
   lastName: string;
   role: string;
@@ -52,12 +64,11 @@ Deno.serve(async (req) => {
 
     console.log('Starting test user creation by master admin:', user.email);
 
-    // Define test users
+    // Define test users with secure random passwords
     const testUsers: TestUser[] = [
       // Test Logistics LLC
       {
         email: 'admin@testlogistics.com',
-        password: 'TestPass123!',
         firstName: 'Admin',
         lastName: 'Test',
         role: 'admin',
@@ -66,7 +77,6 @@ Deno.serve(async (req) => {
       },
       {
         email: 'sales@testlogistics.com',
-        password: 'TestPass123!',
         firstName: 'Sales',
         lastName: 'Agent',
         role: 'sales',
@@ -74,7 +84,6 @@ Deno.serve(async (req) => {
       },
       {
         email: 'dispatch@testlogistics.com',
-        password: 'TestPass123!',
         firstName: 'Dispatch',
         lastName: 'Manager',
         role: 'dispatcher',
@@ -82,7 +91,6 @@ Deno.serve(async (req) => {
       },
       {
         email: 'treasury@testlogistics.com',
-        password: 'TestPass123!',
         firstName: 'Treasury',
         lastName: 'Officer',
         role: 'treasury',
@@ -90,7 +98,6 @@ Deno.serve(async (req) => {
       },
       {
         email: 'driver@testlogistics.com',
-        password: 'TestPass123!',
         firstName: 'John',
         lastName: 'Driver',
         role: 'driver',
@@ -99,7 +106,6 @@ Deno.serve(async (req) => {
       // Demo Freight Corp
       {
         email: 'admin@demofreight.com',
-        password: 'TestPass123!',
         firstName: 'Demo',
         lastName: 'Admin',
         role: 'admin',
@@ -108,7 +114,6 @@ Deno.serve(async (req) => {
       },
       {
         email: 'sales@demofreight.com',
-        password: 'TestPass123!',
         firstName: 'Demo',
         lastName: 'Sales',
         role: 'sales',
@@ -116,7 +121,6 @@ Deno.serve(async (req) => {
       },
       {
         email: 'dispatch@demofreight.com',
-        password: 'TestPass123!',
         firstName: 'Demo',
         lastName: 'Dispatch',
         role: 'dispatcher',
@@ -131,10 +135,13 @@ Deno.serve(async (req) => {
       try {
         console.log(`Creating user: ${testUser.email}`);
 
+        // Generate a unique secure password for this user
+        const password = generateSecurePassword();
+
         // Create auth user
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
           email: testUser.email,
-          password: testUser.password,
+          password: password,
           email_confirm: true,
           user_metadata: {
             first_name: testUser.firstName,
@@ -203,6 +210,7 @@ Deno.serve(async (req) => {
         console.log(`✓ Successfully created: ${testUser.email} (${testUser.role})`);
         results.push({
           email: testUser.email,
+          password: password, // Return password in response for one-time viewing
           success: true,
           role: testUser.role,
           company: testUser.companyName,
