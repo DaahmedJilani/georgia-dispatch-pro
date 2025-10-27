@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, TruckIcon, DollarSign } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { SeedTestUsersButton } from '@/components/admin/SeedTestUsersButton';
 
 interface CompanyStats {
@@ -97,21 +98,36 @@ export default function MasterAdminDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Master Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold" style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              Master Admin Dashboard
+            </h1>
             <p className="text-muted-foreground">System-wide overview and company management</p>
+            <Badge className="mt-2" style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: '#000' }}>
+              Master Administrator
+            </Badge>
           </div>
-          <SeedTestUsersButton />
+          <div className="flex gap-2">
+            <SeedTestUsersButton />
+            <Button variant="outline">
+              <Building2 className="mr-2 h-4 w-4" />
+              Add Company
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat) => (
-            <Card key={stat.title}>
+            <Card key={stat.title} className="overflow-hidden hover:shadow-lg transition-all">
+              <div className="h-2 bg-gradient-to-r from-yellow-400 to-orange-400" />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                <div className="p-2 rounded-lg bg-gradient-to-r from-yellow-400/20 to-orange-400/20">
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">Across all companies</p>
               </CardContent>
             </Card>
           ))}

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { InviteTeamMemberDialog } from '@/components/team/InviteTeamMemberDialog';
+import { Plus, UserCog } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { InviteTeamMemberDialog } from '@/components/team/InviteTeamMemberDialog';
+import { RoleAssignmentDialog } from '@/components/team/RoleAssignmentDialog';
 
 interface TeamMember {
   id: string;
@@ -23,6 +24,8 @@ export default function TeamManagement() {
   const [loading, setLoading] = useState(true);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; role?: string } | null>(null);
 
   useEffect(() => {
     fetchTeamMembers();
@@ -120,6 +123,7 @@ export default function TeamManagement() {
                   <TableHead>Role</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -130,11 +134,35 @@ export default function TeamManagement() {
                     </TableCell>
                     <TableCell>{member.email}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{member.role}</Badge>
+                      <Badge 
+                        variant="outline"
+                        style={{
+                          background: member.role === 'sales' ? 'hsl(var(--role-sales))' :
+                            member.role === 'dispatcher' ? 'hsl(var(--role-dispatch))' :
+                            member.role === 'treasury' ? 'hsl(var(--role-treasury))' :
+                            member.role === 'admin' ? 'hsl(var(--role-admin))' :
+                            'hsl(var(--muted))',
+                          color: member.role !== 'N/A' ? 'white' : 'inherit'
+                        }}
+                      >
+                        {member.role}
+                      </Badge>
                     </TableCell>
                     <TableCell>{new Date(member.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <Badge variant="default">Active</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedUser({ id: member.id, role: member.role });
+                          setRoleDialogOpen(true);
+                        }}
+                      >
+                        <UserCog className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -143,11 +171,21 @@ export default function TeamManagement() {
           </CardContent>
         </Card>
 
-        <InviteTeamMemberDialog 
-          open={inviteDialogOpen} 
-          onOpenChange={setInviteDialogOpen}
+      <InviteTeamMemberDialog
+        open={inviteDialogOpen}
+        onOpenChange={setInviteDialogOpen}
+        onSuccess={fetchTeamMembers}
+      />
+
+      {selectedUser && (
+        <RoleAssignmentDialog
+          open={roleDialogOpen}
+          onOpenChange={setRoleDialogOpen}
+          userId={selectedUser.id}
+          currentRole={selectedUser.role}
           onSuccess={fetchTeamMembers}
         />
+      )}
       </div>
     </DashboardLayout>
   );

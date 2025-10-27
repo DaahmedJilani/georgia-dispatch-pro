@@ -21,14 +21,18 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'inbox' | 'sent'>('inbox');
   const [users, setUsers] = useState<any[]>([]);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState({
     recipient_id: '',
+    recipient_role: '',
+    sender_role: '',
     subject: '',
     body: '',
     load_id: '',
   });
 
   useEffect(() => {
+    fetchUserRole();
     fetchMessages();
     fetchUsers();
 
@@ -53,6 +57,26 @@ const Messages = () => {
       supabase.removeChannel(channel);
     };
   }, [view]);
+
+  const fetchUserRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: role } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (role) {
+        setUserRole(role.role);
+        setNewMessage(prev => ({ ...prev, sender_role: role.role }));
+      }
+    } catch (error: any) {
+      console.error('Error fetching user role:', error);
+    }
+  };
 
   const fetchMessages = async () => {
     try {
@@ -93,13 +117,46 @@ const Messages = () => {
 
   const fetchUsers = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get user's role to filter available recipients
+      const { data: currentUserRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // Role-based message routing
+      let roleFilter: string[] = [];
+      if (currentUserRole?.role === 'dispatcher') {
+        roleFilter = ['driver', 'admin'];
+      } else if (currentUserRole?.role === 'sales') {
+        roleFilter = ['carrier', 'driver', 'admin'];
+      } else if (currentUserRole?.role === 'treasury') {
+        roleFilter = ['admin'];
+      } else if (currentUserRole?.role === 'admin') {
+        roleFilter = ['sales', 'dispatcher', 'treasury', 'driver'];
+      }
+
       const { data, error } = await supabase
         .from('profiles')
-        .select('user_id, first_name, last_name')
+        .select(`
+          user_id, 
+          first_name, 
+          last_name,
+          user_roles!inner(role)
+        `)
         .order('first_name');
 
       if (error) throw error;
-      setUsers(data || []);
+
+      // Filter based on allowed roles
+      const filteredUsers = roleFilter.length > 0
+        ? data?.filter((u: any) => roleFilter.includes(u.user_roles[0]?.role))
+        : data;
+
+      setUsers(filteredUsers || []);
     } catch (error: any) {
       console.error('Error fetching users:', error);
     }
@@ -138,6 +195,8 @@ const Messages = () => {
           company_id: profile.company_id,
           sender_id: user.id,
           recipient_id: newMessage.recipient_id,
+          sender_role: newMessage.sender_role,
+          recipient_role: newMessage.recipient_role,
           subject: newMessage.subject,
           body: newMessage.body,
           load_id: newMessage.load_id || null,
@@ -150,7 +209,14 @@ const Messages = () => {
         description: "Your message has been sent successfully",
       });
 
-      setNewMessage({ recipient_id: '', subject: '', body: '', load_id: '' });
+      setNewMessage({ 
+        recipient_id: '', 
+        recipient_role: '',
+        sender_role: userRole || '',
+        subject: '', 
+        body: '', 
+        load_id: '' 
+      });
       fetchMessages();
     } catch (error: any) {
       toast({
@@ -189,24 +255,36 @@ const Messages = () => {
                 <DialogTitle>Compose Message</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div>
-                  <Label>Recipient</Label>
-                  <Select
-                    value={newMessage.recipient_id}
-                    onValueChange={(value) => setNewMessage({ ...newMessage, recipient_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select recipient" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {users.map((user) => (
-                        <SelectItem key={user.user_id} value={user.user_id}>
-                          {user.first_name} {user.last_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                 <div>
+                   <Label>Recipient</Label>
+                   <Select
+                     value={newMessage.recipient_id}
+                     onValueChange={(value) => {
+                       const selectedUser = users.find(u => u.user_id === value);
+                       setNewMessage({ 
+                         ...newMessage, 
+                         recipient_id: value,
+                         recipient_role: selectedUser?.user_roles[0]?.role || ''
+                       });
+                     }}
+                   >
+                     <SelectTrigger>
+                       <SelectValue placeholder="Select recipient" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       {users.map((user) => (
+                         <SelectItem key={user.user_id} value={user.user_id}>
+                           {user.first_name} {user.last_name}
+                           {user.user_roles[0]?.role && (
+                             <Badge className="ml-2" variant="outline">
+                               {user.user_roles[0].role}
+                             </Badge>
+                           )}
+                         </SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
+                 </div>
 
                 <div>
                   <Label>Subject</Label>

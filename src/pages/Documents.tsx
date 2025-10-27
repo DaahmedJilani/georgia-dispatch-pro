@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   Table,
   TableBody,
@@ -38,6 +40,8 @@ const Documents = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<any>(null);
   const [selectedDocForExtraction, setSelectedDocForExtraction] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('all');
+  const { role, isMasterAdmin } = useUserRole();
 
   useEffect(() => {
     checkAuth();
@@ -66,10 +70,24 @@ const Documents = () => {
         setCompanyId(profile.company_id);
       }
 
-      const { data, error } = await supabase
+      // Filter documents based on role and visibility
+      let query = supabase
         .from("documents")
         .select("*")
         .order("created_at", { ascending: false });
+
+      // Apply role-based filtering
+      if (!isMasterAdmin && role) {
+        if (role === 'sales') {
+          query = query.or('visibility.eq.sales,visibility.eq.admin');
+        } else if (role === 'dispatcher') {
+          query = query.or('visibility.eq.dispatcher,visibility.eq.sales,visibility.eq.admin');
+        } else if (role === 'treasury') {
+          query = query.or('document_type.eq.invoice,visibility.eq.admin');
+        }
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setDocuments(data || []);
@@ -152,6 +170,10 @@ const Documents = () => {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
   };
 
+  const salesDocs = documents.filter(d => ['mc', 'w9', 'coi', 'noa', 'void_check'].includes(d.document_type));
+  const dispatchDocs = documents.filter(d => ['rc', 'bol', 'pod', 'do', 'invoice'].includes(d.document_type));
+  const driverDocs = documents.filter(d => ['license', 'cab_card', 'truck_image'].includes(d.document_type));
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -159,6 +181,14 @@ const Documents = () => {
           <div>
             <h1 className="text-3xl font-bold">Documents</h1>
             <p className="text-muted-foreground">Manage load documents and files</p>
+            {role && (
+              <Badge className="mt-2">
+                {role === 'sales' ? 'Sales Documents Only' :
+                 role === 'dispatcher' ? 'Sales & Dispatch Documents' :
+                 role === 'treasury' ? 'Invoice Documents Only' :
+                 'All Documents'}
+              </Badge>
+            )}
           </div>
           <Button onClick={() => setUploadDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -166,8 +196,23 @@ const Documents = () => {
           </Button>
         </div>
 
-        <Card>
-          <Table>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList>
+            <TabsTrigger value="all">All Documents</TabsTrigger>
+            {(isMasterAdmin || role === 'sales' || role === 'dispatcher' || role === 'admin') && (
+              <TabsTrigger value="sales">Sales Docs</TabsTrigger>
+            )}
+            {(isMasterAdmin || role === 'dispatcher' || role === 'admin') && (
+              <TabsTrigger value="dispatch">Dispatch Docs</TabsTrigger>
+            )}
+            {(isMasterAdmin || role === 'admin') && (
+              <TabsTrigger value="driver">Driver Docs</TabsTrigger>
+            )}
+          </TabsList>
+
+          <TabsContent value="all">
+            <Card>
+              <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>File Name</TableHead>
@@ -239,7 +284,126 @@ const Documents = () => {
               )}
             </TableBody>
           </Table>
-        </Card>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sales">
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>File Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Uploaded</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {salesDocs.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center">No sales documents</TableCell>
+                    </TableRow>
+                  ) : (
+                    salesDocs.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell className="font-medium">{doc.file_name}</TableCell>
+                        <TableCell><Badge variant="outline">{doc.document_type}</Badge></TableCell>
+                        <TableCell>{formatFileSize(doc.file_size || 0)}</TableCell>
+                        <TableCell>{new Date(doc.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)}>
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="dispatch">
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>File Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Uploaded</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {dispatchDocs.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center">No dispatch documents</TableCell>
+                    </TableRow>
+                  ) : (
+                    dispatchDocs.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell className="font-medium">{doc.file_name}</TableCell>
+                        <TableCell><Badge variant="outline">{doc.document_type}</Badge></TableCell>
+                        <TableCell>{formatFileSize(doc.file_size || 0)}</TableCell>
+                        <TableCell>{new Date(doc.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)}>
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="driver">
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>File Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Uploaded</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {driverDocs.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center">No driver documents</TableCell>
+                    </TableRow>
+                  ) : (
+                    driverDocs.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell className="font-medium">{doc.file_name}</TableCell>
+                        <TableCell><Badge variant="outline">{doc.document_type}</Badge></TableCell>
+                        <TableCell>{formatFileSize(doc.file_size || 0)}</TableCell>
+                        <TableCell>{new Date(doc.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)}>
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <DocumentUploadDialog

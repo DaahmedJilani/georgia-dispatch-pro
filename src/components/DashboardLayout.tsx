@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   LayoutDashboard,
   Package,
@@ -222,6 +224,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <p className="text-xs text-sidebar-foreground/60">
                 {profile.first_name} {profile.last_name}
               </p>
+              {role && (
+                <Badge className="mt-2" variant="outline">
+                  {role === 'sales' ? 'Sales Agent' :
+                   role === 'dispatcher' ? 'Dispatcher' :
+                   role === 'treasury' ? 'Treasury' :
+                   role === 'admin' ? 'Admin' :
+                   isMasterAdmin ? 'Master Admin' : role}
+                </Badge>
+              )}
             </div>
           )}
 
@@ -253,7 +264,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           </nav>
 
           {/* Logout */}
-          <div className="p-3 border-t border-sidebar-border">
+          <div className="p-3 border-t border-sidebar-border space-y-2">
+            <div className="flex items-center justify-between px-3">
+              <span className="text-xs text-sidebar-foreground/60">Theme</span>
+              <ThemeToggle />
+            </div>
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent/50"

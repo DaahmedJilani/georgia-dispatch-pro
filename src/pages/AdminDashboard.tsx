@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TruckIcon, Users, Building2, DollarSign, Plus } from 'lucide-react';
+import { TruckIcon, Users, Building2, DollarSign, Plus, Shield, Eye, BarChart3, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 interface DashboardStats {
   totalLoads: number;
@@ -115,60 +116,129 @@ export default function AdminDashboard() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold" style={{ background: 'var(--gradient-admin)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              Admin Dashboard
+            </h1>
             <p className="text-muted-foreground">Manage your company operations and team</p>
+            <Badge className="mt-2" style={{ background: 'hsl(var(--role-admin))', color: 'hsl(var(--role-admin-foreground))' }}>
+              Company Administrator
+            </Badge>
           </div>
-          <Button onClick={() => navigate('/team')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Manage Team
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/analytics')}>
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Analytics
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/audit-logs')}>
+              <Shield className="mr-2 h-4 w-4" />
+              Audit Logs
+            </Button>
+            <Button style={{ background: 'hsl(var(--role-admin))' }} onClick={() => navigate('/team')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Manage Team
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat) => (
-            <Card key={stat.title}>
+            <Card key={stat.title} className="overflow-hidden hover:shadow-lg transition-all">
+              <div className="h-2 bg-gradient-to-r from-primary to-primary/60" />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stat.value}</div>
+                <Progress value={65} className="mt-2 h-1" />
+                <p className="text-xs text-muted-foreground mt-1">+12% from last month</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Team Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {teamMembers.map((member) => (
-                  <TableRow key={member.id}>
-                    <TableCell className="font-medium">
-                      {member.first_name} {member.last_name}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{member.role}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="default">Active</Badge>
-                    </TableCell>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Team Overview
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                </TableHeader>
+                <TableBody>
+                  {teamMembers.map((member) => (
+                    <TableRow key={member.id}>
+                      <TableCell className="font-medium">
+                        {member.first_name} {member.last_name}
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="outline"
+                          style={{
+                            background: member.role === 'sales' ? 'hsl(var(--role-sales))' :
+                              member.role === 'dispatcher' ? 'hsl(var(--role-dispatch))' :
+                              member.role === 'treasury' ? 'hsl(var(--role-treasury))' :
+                              'hsl(var(--role-admin))',
+                            color: 'white'
+                          }}
+                        >
+                          {member.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="default">Active</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCog className="h-5 w-5" />
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/team')}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Team Member
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/loads')}>
+                <TruckIcon className="mr-2 h-4 w-4" />
+                Create New Load
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/carriers')}>
+                <Building2 className="mr-2 h-4 w-4" />
+                Add Carrier
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/settings')}>
+                <Shield className="mr-2 h-4 w-4" />
+                Company Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </DashboardLayout>
   );
