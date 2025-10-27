@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TruckIcon, Users, MapPin, ClipboardList } from 'lucide-react';
+import { TruckIcon, Users, MapPin, ClipboardList, Plus, FileText } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { DispatchAnalytics } from '@/components/analytics/DispatchAnalytics';
+import { useNavigate } from 'react-router-dom';
 
 interface DispatchStats {
   activeLoads: number;
@@ -40,7 +43,9 @@ interface Load {
 }
 
 export default function DispatchDashboard() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [dispatcherId, setDispatcherId] = useState<string>('');
   const [stats, setStats] = useState<DispatchStats>({
     activeLoads: 0,
     availableDrivers: 0,
@@ -58,6 +63,8 @@ export default function DispatchDashboard() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      setDispatcherId(user.id);
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -138,10 +145,33 @@ export default function DispatchDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Dispatch Dashboard</h1>
-          <p className="text-muted-foreground">Monitor active loads and driver locations</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold" style={{ background: 'var(--gradient-dispatch)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              Dispatch Dashboard
+            </h1>
+            <p className="text-muted-foreground">Monitor and manage your fleet operations</p>
+            <Badge className="mt-2" style={{ background: 'hsl(var(--role-dispatch))', color: 'hsl(var(--role-dispatch-foreground))' }}>
+              Dispatcher
+            </Badge>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/carriers')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Carrier
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/documents')}>
+              <FileText className="mr-2 h-4 w-4" />
+              Upload Documents
+            </Button>
+            <Button style={{ background: 'hsl(var(--role-dispatch))' }} onClick={() => navigate('/fleet-map')}>
+              <MapPin className="mr-2 h-4 w-4" />
+              Fleet Map
+            </Button>
+          </div>
         </div>
+
+        <DispatchAnalytics dispatcherId={dispatcherId} />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat) => (

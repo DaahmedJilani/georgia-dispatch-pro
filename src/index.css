@@ -8,39 +8,51 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Fleet by Georgia Industrials - Professional Dispatch Platform */
-    --background: 210 11% 96%;
-    --foreground: 210 56% 10%;
+    /* Georgia Dispatch Pro - Brand Colors */
+    --background: 0 10% 97%;
+    --foreground: 357 32% 30%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 56% 10%;
+    --card-foreground: 357 32% 30%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 56% 10%;
+    --popover-foreground: 357 32% 30%;
 
-    /* Midnight Blue #0D1B2A */
-    --primary: 210 56% 10%;
+    /* Brown #663635 - Primary brand color */
+    --primary: 357 32% 30%;
     --primary-foreground: 0 0% 100%;
 
-    /* Steel Gray #1B263B */
-    --secondary: 212 37% 16%;
-    --secondary-foreground: 0 0% 100%;
+    /* Cream #F9F1F0 - Subtle background */
+    --secondary: 10 33% 96%;
+    --secondary-foreground: 357 32% 30%;
 
-    --muted: 210 20% 92%;
-    --muted-foreground: 210 15% 45%;
+    --muted: 10 20% 94%;
+    --muted-foreground: 357 10% 50%;
 
-    /* Sky Blue Accent #415A77 */
-    --accent: 209 30% 36%;
-    --accent-foreground: 0 0% 100%;
+    /* Pink #E1999F - Accent */
+    --accent: 353 49% 75%;
+    --accent-foreground: 357 32% 30%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 20% 88%;
-    --input: 210 20% 88%;
-    --ring: 209 30% 36%;
+    --border: 10 20% 90%;
+    --input: 10 20% 90%;
+    --ring: 357 32% 30%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
+
+    /* Role-specific colors */
+    --role-sales: 353 49% 75%; /* Pink */
+    --role-sales-foreground: 357 32% 30%;
+    --role-dispatch: 30 60% 50%; /* Brown-Orange */
+    --role-dispatch-foreground: 0 0% 100%;
+    --role-treasury: 45 100% 65%; /* Gold */
+    --role-treasury-foreground: 357 32% 30%;
+    --role-admin: 357 32% 30%; /* Brown */
+    --role-admin-foreground: 0 0% 100%;
+    --role-driver: 210 50% 55%; /* Blue */
+    --role-driver-foreground: 0 0% 100%;
 
     /* Status colors */
     --status-assigned: 45 93% 47%;
@@ -50,14 +62,21 @@ All colors MUST be HSL.
     --status-pending: 210 15% 60%;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(210 56% 10%), hsl(212 37% 16%));
-    --gradient-accent: linear-gradient(135deg, hsl(209 30% 36%), hsl(217 91% 60%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 11% 96%));
+    --gradient-primary: linear-gradient(135deg, hsl(357 32% 30%), hsl(357 32% 40%));
+    --gradient-sales: linear-gradient(135deg, hsl(353 49% 75%), hsl(353 49% 85%));
+    --gradient-dispatch: linear-gradient(135deg, hsl(30 60% 50%), hsl(30 60% 60%));
+    --gradient-treasury: linear-gradient(135deg, hsl(45 100% 65%), hsl(45 100% 75%));
+    --gradient-admin: linear-gradient(135deg, hsl(357 32% 30%), hsl(10 33% 96%));
+    --gradient-driver: linear-gradient(135deg, hsl(210 50% 55%), hsl(210 50% 65%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(10 33% 96%));
 
     /* Shadows */
-    --shadow-sm: 0 2px 8px -2px hsl(210 56% 10% / 0.08);
-    --shadow-md: 0 8px 16px -4px hsl(210 56% 10% / 0.12);
-    --shadow-lg: 0 16px 32px -8px hsl(210 56% 10% / 0.16);
+    --shadow-sm: 0 2px 8px -2px hsl(357 32% 30% / 0.08);
+    --shadow-md: 0 8px 16px -4px hsl(357 32% 30% / 0.12);
+    --shadow-lg: 0 16px 32px -8px hsl(357 32% 30% / 0.16);
+    --shadow-glow-sales: 0 0 24px hsl(353 49% 75% / 0.3);
+    --shadow-glow-dispatch: 0 0 24px hsl(30 60% 50% / 0.3);
+    --shadow-glow-treasury: 0 0 24px hsl(45 100% 65% / 0.3);
 
     /* Sidebar */
     --sidebar-background: 210 56% 10%;
@@ -71,33 +90,33 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 210 56% 10%;
-    --foreground: 210 20% 92%;
+    --background: 357 32% 12%;
+    --foreground: 10 33% 96%;
 
-    --card: 212 37% 16%;
-    --card-foreground: 210 20% 92%;
+    --card: 357 32% 18%;
+    --card-foreground: 10 33% 96%;
 
-    --popover: 212 37% 16%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 357 32% 18%;
+    --popover-foreground: 10 33% 96%;
 
-    --primary: 209 30% 36%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 353 49% 75%;
+    --primary-foreground: 357 32% 12%;
 
-    --secondary: 210 40% 15%;
-    --secondary-foreground: 210 20% 92%;
+    --secondary: 357 32% 22%;
+    --secondary-foreground: 10 33% 96%;
 
-    --muted: 210 40% 15%;
-    --muted-foreground: 210 15% 60%;
+    --muted: 357 32% 22%;
+    --muted-foreground: 10 20% 70%;
 
-    --accent: 217 91% 60%;
+    --accent: 353 49% 65%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 92%;
+    --destructive-foreground: 10 33% 96%;
 
-    --border: 210 40% 15%;
-    --input: 210 40% 15%;
-    --ring: 209 30% 36%;
+    --border: 357 32% 22%;
+    --input: 357 32% 22%;
+    --ring: 353 49% 75%;
 
     --sidebar-background: 210 56% 8%;
     --sidebar-foreground: 210 20% 92%;

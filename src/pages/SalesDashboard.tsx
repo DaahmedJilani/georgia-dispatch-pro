@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TruckIcon, DollarSign, Percent, User, UserPlus, Building } from 'lucide-react';
+import { TruckIcon, DollarSign, Percent, User, UserPlus, Building, FileText } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { SalesAnalytics } from '@/components/analytics/SalesAnalytics';
 
 interface SalesStats {
   carriersOnboarded: number;
@@ -141,12 +143,27 @@ export default function SalesDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold" style={{ background: 'var(--gradient-sales)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               Sales Dashboard
             </h1>
             <p className="text-muted-foreground">Track your onboarding performance and commissions</p>
+            <Badge className="mt-2" style={{ background: 'hsl(var(--role-sales))', color: 'hsl(var(--role-sales-foreground))' }}>
+              Sales Agent
+            </Badge>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline">
+              <FileText className="mr-2 h-4 w-4" />
+              Upload Sales Docs
+            </Button>
+            <Button style={{ background: 'hsl(var(--role-sales))' }}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Invite Carrier
+            </Button>
           </div>
         </div>
+
+        <SalesAnalytics salesAgentId={""} />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat) => (

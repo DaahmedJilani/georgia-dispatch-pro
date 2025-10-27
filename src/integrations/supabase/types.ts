@@ -299,6 +299,120 @@ export type Database = {
         }
         Relationships: []
       }
+      dispatch_performance: {
+        Row: {
+          carrier_id: string | null
+          company_id: string
+          created_at: string
+          dispatcher_id: string
+          id: string
+          load_id: string
+          revenue: number | null
+        }
+        Insert: {
+          carrier_id?: string | null
+          company_id: string
+          created_at?: string
+          dispatcher_id: string
+          id?: string
+          load_id: string
+          revenue?: number | null
+        }
+        Update: {
+          carrier_id?: string | null
+          company_id?: string
+          created_at?: string
+          dispatcher_id?: string
+          id?: string
+          load_id?: string
+          revenue?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispatch_performance_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "carriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispatch_performance_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispatch_performance_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dispatch_performance_load_id_fkey"
+            columns: ["load_id"]
+            isOneToOne: false
+            referencedRelation: "loads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dispatcher_notes: {
+        Row: {
+          admin_feedback: string | null
+          company_id: string
+          created_at: string
+          dispatcher_id: string
+          id: string
+          load_id: string | null
+          note_text: string
+          updated_at: string
+        }
+        Insert: {
+          admin_feedback?: string | null
+          company_id: string
+          created_at?: string
+          dispatcher_id: string
+          id?: string
+          load_id?: string | null
+          note_text: string
+          updated_at?: string
+        }
+        Update: {
+          admin_feedback?: string | null
+          company_id?: string
+          created_at?: string
+          dispatcher_id?: string
+          id?: string
+          load_id?: string | null
+          note_text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispatcher_notes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispatcher_notes_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "dispatcher_notes_load_id_fkey"
+            columns: ["load_id"]
+            isOneToOne: false
+            referencedRelation: "loads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           carrier_id: string | null
@@ -1059,6 +1173,54 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_activities: {
+        Row: {
+          activity_type: string
+          company_id: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          notes: string | null
+          sales_agent_id: string
+        }
+        Insert: {
+          activity_type: string
+          company_id: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          notes?: string | null
+          sales_agent_id: string
+        }
+        Update: {
+          activity_type?: string
+          company_id?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          notes?: string | null
+          sales_agent_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_activities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_activities_sales_agent_id_fkey"
+            columns: ["sales_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
