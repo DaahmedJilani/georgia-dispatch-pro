@@ -96,10 +96,34 @@ export default function TreasuryDashboard() {
   };
 
   const statCards = [
-    { title: 'Total Invoices', value: stats.totalInvoices, icon: FileText, color: 'text-blue-600' },
-    { title: 'Outstanding', value: `$${stats.outstanding.toLocaleString()}`, icon: AlertCircle, color: 'text-orange-600' },
-    { title: 'Paid This Month', value: `$${stats.paidThisMonth.toLocaleString()}`, icon: CheckCircle, color: 'text-green-600' },
-    { title: 'Factoring Active', value: stats.factoringActive, icon: DollarSign, color: 'text-purple-600' },
+    { 
+      title: 'Total Pending', 
+      value: stats.totalInvoices, 
+      icon: FileText, 
+      gradient: 'from-orange-500 to-orange-600',
+      description: 'Invoices awaiting payment'
+    },
+    { 
+      title: 'Outstanding Balance', 
+      value: `$${stats.outstanding.toLocaleString()}`, 
+      icon: AlertCircle, 
+      gradient: 'from-red-500 to-red-600',
+      description: 'Total unpaid amount'
+    },
+    { 
+      title: 'Paid This Month', 
+      value: `$${stats.paidThisMonth.toLocaleString()}`, 
+      icon: CheckCircle, 
+      gradient: 'from-green-500 to-green-600',
+      description: 'Successfully collected'
+    },
+    { 
+      title: 'Factoring Active', 
+      value: stats.factoringActive, 
+      icon: DollarSign, 
+      gradient: 'from-blue-500 to-blue-600',
+      description: 'Loads using factoring'
+    },
   ];
 
   if (loading) {
@@ -115,20 +139,28 @@ export default function TreasuryDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Treasury Dashboard</h1>
-          <p className="text-muted-foreground">Monitor invoices and payments</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-800 bg-clip-text text-transparent">
+              Treasury Dashboard
+            </h1>
+            <p className="text-muted-foreground">Monitor invoices, payments, and financial health</p>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat) => (
-            <Card key={stat.title}>
+            <Card key={stat.title} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+              <div className={`h-2 bg-gradient-to-r ${stat.gradient}`} />
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                <div className={`p-2 rounded-lg bg-gradient-to-r ${stat.gradient} bg-opacity-10`}>
+                  <stat.icon className="h-5 w-5 text-white" />
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
               </CardContent>
             </Card>
           ))}

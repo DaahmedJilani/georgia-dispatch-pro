@@ -199,6 +199,7 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
+          sales_agent_id: string | null
           updated_at: string
         }
         Insert: {
@@ -217,6 +218,7 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
+          sales_agent_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -235,6 +237,7 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          sales_agent_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -244,6 +247,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carriers_sales_agent_id_fkey"
+            columns: ["sales_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -255,6 +265,7 @@ export type Database = {
           docusign_enabled: boolean | null
           email: string | null
           id: string
+          logo_url: string | null
           name: string
           phone: string | null
           subscription_status: string | null
@@ -267,6 +278,7 @@ export type Database = {
           docusign_enabled?: boolean | null
           email?: string | null
           id?: string
+          logo_url?: string | null
           name: string
           phone?: string | null
           subscription_status?: string | null
@@ -279,6 +291,7 @@ export type Database = {
           docusign_enabled?: boolean | null
           email?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
           phone?: string | null
           subscription_status?: string | null
@@ -377,6 +390,7 @@ export type Database = {
           created_at: string
           current_location_lat: number | null
           current_location_lng: number | null
+          dispatcher_id: string | null
           email: string | null
           first_name: string
           gps_consent: boolean | null
@@ -387,6 +401,7 @@ export type Database = {
           license_number: string | null
           notes: string | null
           phone: string | null
+          sales_agent_id: string | null
           status: string | null
           updated_at: string
           user_id: string | null
@@ -397,6 +412,7 @@ export type Database = {
           created_at?: string
           current_location_lat?: number | null
           current_location_lng?: number | null
+          dispatcher_id?: string | null
           email?: string | null
           first_name: string
           gps_consent?: boolean | null
@@ -407,6 +423,7 @@ export type Database = {
           license_number?: string | null
           notes?: string | null
           phone?: string | null
+          sales_agent_id?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string | null
@@ -417,6 +434,7 @@ export type Database = {
           created_at?: string
           current_location_lat?: number | null
           current_location_lng?: number | null
+          dispatcher_id?: string | null
           email?: string | null
           first_name?: string
           gps_consent?: boolean | null
@@ -427,6 +445,7 @@ export type Database = {
           license_number?: string | null
           notes?: string | null
           phone?: string | null
+          sales_agent_id?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string | null
@@ -445,6 +464,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "companies"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drivers_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "drivers_sales_agent_id_fkey"
+            columns: ["sales_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "drivers_user_id_fkey"
@@ -560,6 +593,7 @@ export type Database = {
           delivery_location: string
           delivery_notes: string | null
           delivery_state: string | null
+          dispatcher_id: string | null
           distance: number | null
           driver_id: string | null
           factoring: boolean | null
@@ -594,6 +628,7 @@ export type Database = {
           delivery_location: string
           delivery_notes?: string | null
           delivery_state?: string | null
+          dispatcher_id?: string | null
           distance?: number | null
           driver_id?: string | null
           factoring?: boolean | null
@@ -628,6 +663,7 @@ export type Database = {
           delivery_location?: string
           delivery_notes?: string | null
           delivery_state?: string | null
+          dispatcher_id?: string | null
           distance?: number | null
           driver_id?: string | null
           factoring?: boolean | null
@@ -674,6 +710,13 @@ export type Database = {
           {
             foreignKeyName: "loads_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "loads_dispatcher_id_fkey"
+            columns: ["dispatcher_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
@@ -775,7 +818,9 @@ export type Database = {
           load_id: string | null
           parent_message_id: string | null
           recipient_id: string
+          recipient_role: string | null
           sender_id: string
+          sender_role: string | null
           subject: string | null
           updated_at: string
         }
@@ -788,7 +833,9 @@ export type Database = {
           load_id?: string | null
           parent_message_id?: string | null
           recipient_id: string
+          recipient_role?: string | null
           sender_id: string
+          sender_role?: string | null
           subject?: string | null
           updated_at?: string
         }
@@ -801,7 +848,9 @@ export type Database = {
           load_id?: string | null
           parent_message_id?: string | null
           recipient_id?: string
+          recipient_role?: string | null
           sender_id?: string
+          sender_role?: string | null
           subject?: string | null
           updated_at?: string
         }
