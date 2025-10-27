@@ -188,6 +188,7 @@ export type Database = {
           company_id: string
           contract_signed: boolean | null
           contract_signed_at: string | null
+          contract_status: string | null
           created_at: string
           docusign_envelope_id: string | null
           docusign_status: string | null
@@ -199,7 +200,10 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
+          sale_stage: string | null
           sales_agent_id: string | null
+          stage_updated_at: string | null
+          stage_updated_by: string | null
           updated_at: string
         }
         Insert: {
@@ -207,6 +211,7 @@ export type Database = {
           company_id: string
           contract_signed?: boolean | null
           contract_signed_at?: string | null
+          contract_status?: string | null
           created_at?: string
           docusign_envelope_id?: string | null
           docusign_status?: string | null
@@ -218,7 +223,10 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
+          sale_stage?: string | null
           sales_agent_id?: string | null
+          stage_updated_at?: string | null
+          stage_updated_by?: string | null
           updated_at?: string
         }
         Update: {
@@ -226,6 +234,7 @@ export type Database = {
           company_id?: string
           contract_signed?: boolean | null
           contract_signed_at?: string | null
+          contract_status?: string | null
           created_at?: string
           docusign_envelope_id?: string | null
           docusign_status?: string | null
@@ -237,7 +246,10 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          sale_stage?: string | null
           sales_agent_id?: string | null
+          stage_updated_at?: string | null
+          stage_updated_by?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -251,6 +263,13 @@ export type Database = {
           {
             foreignKeyName: "carriers_sales_agent_id_fkey"
             columns: ["sales_agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "carriers_stage_updated_by_fkey"
+            columns: ["stage_updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]

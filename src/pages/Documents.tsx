@@ -76,14 +76,33 @@ const Documents = () => {
         .select("*")
         .order("created_at", { ascending: false });
 
-      // Apply role-based filtering
+      // Apply company filter if not master admin
+      if (!isMasterAdmin && profile?.company_id) {
+        query = query.eq('company_id', profile.company_id);
+      }
+
+      // Apply role-based visibility filtering
       if (!isMasterAdmin && role) {
         if (role === 'sales') {
-          query = query.or('visibility.eq.sales,visibility.eq.admin');
+          // Sales can only see sales docs (MC, W9, COI, NOA, VOID CHECK)
+          query = query.in('document_type', ['mc', 'w9', 'coi', 'noa', 'void_check']);
         } else if (role === 'dispatcher') {
-          query = query.or('visibility.eq.dispatcher,visibility.eq.sales,visibility.eq.admin');
+          // Dispatcher can see sales docs (read-only) + dispatch docs + driver docs
+          query = query.in('document_type', ['mc', 'w9', 'coi', 'noa', 'void_check', 'rc', 'bol', 'pod', 'do', 'invoice', 'license', 'cab_card', 'truck_image']);
         } else if (role === 'treasury') {
-          query = query.or('document_type.eq.invoice,visibility.eq.admin');
+          // Treasury can only see invoices
+          query = query.eq('document_type', 'invoice');
+        } else if (role === 'driver') {
+          // Drivers can only see their own driver docs
+          const { data: driverData } = await supabase
+            .from('drivers')
+            .select('id')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (driverData) {
+            query = query.eq('driver_id', driverData.id).in('document_type', ['license', 'cab_card', 'truck_image']);
+          }
         }
       }
 
@@ -198,15 +217,20 @@ const Documents = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList>
-            <TabsTrigger value="all">All Documents</TabsTrigger>
+            {(isMasterAdmin || role === 'admin') && (
+              <TabsTrigger value="all">All Documents</TabsTrigger>
+            )}
             {(isMasterAdmin || role === 'sales' || role === 'dispatcher' || role === 'admin') && (
               <TabsTrigger value="sales">Sales Docs</TabsTrigger>
             )}
             {(isMasterAdmin || role === 'dispatcher' || role === 'admin') && (
               <TabsTrigger value="dispatch">Dispatch Docs</TabsTrigger>
             )}
-            {(isMasterAdmin || role === 'admin') && (
+            {(isMasterAdmin || role === 'dispatcher' || role === 'admin') && (
               <TabsTrigger value="driver">Driver Docs</TabsTrigger>
+            )}
+            {role === 'treasury' && (
+              <TabsTrigger value="invoices">Invoices</TabsTrigger>
             )}
           </TabsList>
 
@@ -395,6 +419,41 @@ const Documents = () => {
                               <Download className="h-4 w-4" />
                             </Button>
                           </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="invoices">
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>File Name</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Uploaded</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {documents.filter(d => d.document_type === 'invoice').length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center">No invoice documents</TableCell>
+                    </TableRow>
+                  ) : (
+                    documents.filter(d => d.document_type === 'invoice').map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell className="font-medium">{doc.file_name}</TableCell>
+                        <TableCell>{formatFileSize(doc.file_size || 0)}</TableCell>
+                        <TableCell>{new Date(doc.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)}>
+                            <Download className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))

@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DispatchAnalytics } from '@/components/analytics/DispatchAnalytics';
+import { DispatcherNotes } from '@/components/dispatch/DispatcherNotes';
 import { useNavigate } from 'react-router-dom';
 
 interface DispatchStats {
@@ -172,6 +173,8 @@ export default function DispatchDashboard() {
         </div>
 
         <DispatchAnalytics dispatcherId={dispatcherId} />
+
+        <DispatcherNotes />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat) => (

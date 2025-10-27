@@ -128,15 +128,19 @@ const Messages = () => {
         .maybeSingle();
 
       // Role-based message routing
+      // Admin ↔ Dispatch, Admin ↔ Driver, Admin ↔ Sales, Admin ↔ Treasury
+      // Sales ↔ Dispatch, Treasury ↔ Dispatch, Dispatch ↔ Driver
       let roleFilter: string[] = [];
-      if (currentUserRole?.role === 'dispatcher') {
-        roleFilter = ['driver', 'admin'];
+      if (currentUserRole?.role === 'admin') {
+        roleFilter = ['sales', 'dispatcher', 'treasury'];
+      } else if (currentUserRole?.role === 'dispatcher') {
+        roleFilter = ['admin', 'sales', 'treasury'];
       } else if (currentUserRole?.role === 'sales') {
-        roleFilter = ['carrier', 'driver', 'admin'];
+        roleFilter = ['admin', 'dispatcher'];
       } else if (currentUserRole?.role === 'treasury') {
-        roleFilter = ['admin'];
-      } else if (currentUserRole?.role === 'admin') {
-        roleFilter = ['sales', 'dispatcher', 'treasury', 'driver'];
+        roleFilter = ['admin', 'dispatcher'];
+      } else if (currentUserRole?.role === 'driver') {
+        roleFilter = ['admin', 'dispatcher'];
       }
 
       const { data, error } = await supabase

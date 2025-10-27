@@ -2,29 +2,16 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TruckIcon, DollarSign, Percent, User, UserPlus, Building, FileText } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { TruckIcon, DollarSign, Percent, User, UserPlus, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SalesAnalytics } from '@/components/analytics/SalesAnalytics';
+import { SalesWorkflowTracker } from '@/components/sales/SalesWorkflowTracker';
 
 interface SalesStats {
   carriersOnboarded: number;
   driversOnboarded: number;
-  myCommission: number;
   conversionRate: number;
-}
-
-interface Load {
-  id: string;
-  load_number: string;
-  pickup_city: string;
-  pickup_state: string;
-  delivery_city: string;
-  delivery_state: string;
-  rate: number;
-  status: string;
-  sales_percentage: number;
 }
 
 export default function SalesDashboard() {
@@ -32,10 +19,9 @@ export default function SalesDashboard() {
   const [stats, setStats] = useState<SalesStats>({
     carriersOnboarded: 0,
     driversOnboarded: 0,
-    myCommission: 0,
     conversionRate: 0,
   });
-  const [myLoads, setMyLoads] = useState<Load[]>([]);
+  const [salesAgentId, setSalesAgentId] = useState<string>('');
 
   useEffect(() => {
     fetchSalesData();
@@ -45,6 +31,8 @@ export default function SalesDashboard() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      setSalesAgentId(user.id);
 
       // Fetch carriers onboarded by this sales agent
       const { data: carriersData } = await supabase
@@ -58,14 +46,6 @@ export default function SalesDashboard() {
         .select('id, status')
         .eq('sales_agent_id', user.id);
 
-      // Fetch loads where this sales agent is assigned
-      const { data: loadsData } = await supabase
-        .from('loads')
-        .select('*')
-        .eq('sales_user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
       const carriersCount = carriersData?.length || 0;
       const driversCount = driversData?.length || 0;
       const activeDrivers = driversData?.filter(d => d.status === 'available' || d.status === 'active').length || 0;
@@ -73,23 +53,11 @@ export default function SalesDashboard() {
       // Calculate conversion rate
       const conversionRate = carriersCount > 0 ? ((activeDrivers / carriersCount) * 100) : 0;
 
-      // Calculate total commission from loads
-      const totalCommission = loadsData?.reduce((sum, load) => {
-        const rate = Number(load.rate || 0);
-        const percentage = Number(load.sales_percentage || 0);
-        return sum + (rate * percentage / 100);
-      }, 0) || 0;
-
       setStats({
         carriersOnboarded: carriersCount,
         driversOnboarded: driversCount,
-        myCommission: totalCommission,
         conversionRate: Math.round(conversionRate),
       });
-
-      if (loadsData) {
-        setMyLoads(loadsData);
-      }
     } catch (error) {
       console.error('Error fetching sales data:', error);
     } finally {
@@ -118,13 +86,6 @@ export default function SalesDashboard() {
       icon: Percent, 
       gradient: 'from-green-500 to-green-600',
       description: 'Carriers → Active Drivers'
-    },
-    { 
-      title: 'My Commission', 
-      value: `$${stats.myCommission.toLocaleString()}`, 
-      icon: DollarSign, 
-      gradient: 'from-orange-500 to-orange-600',
-      description: 'Total earnings'
     },
   ];
 
@@ -163,9 +124,9 @@ export default function SalesDashboard() {
           </div>
         </div>
 
-        <SalesAnalytics salesAgentId={""} />
+        <SalesAnalytics salesAgentId={salesAgentId} />
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-3">
           {statCards.map((stat) => (
             <Card key={stat.title} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <div className={`h-2 bg-gradient-to-r ${stat.gradient}`} />
@@ -183,45 +144,7 @@ export default function SalesDashboard() {
           ))}
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>My Active Loads</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Load #</TableHead>
-                  <TableHead>Route</TableHead>
-                  <TableHead>Rate</TableHead>
-                  <TableHead>Commission %</TableHead>
-                  <TableHead>My Commission</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {myLoads.map((load) => (
-                  <TableRow key={load.id}>
-                    <TableCell className="font-medium">{load.load_number}</TableCell>
-                    <TableCell>
-                      {load.pickup_city}, {load.pickup_state} → {load.delivery_city}, {load.delivery_state}
-                    </TableCell>
-                    <TableCell>${Number(load.rate).toLocaleString()}</TableCell>
-                    <TableCell>{load.sales_percentage}%</TableCell>
-                    <TableCell className="font-semibold text-green-600">
-                      ${((Number(load.rate) * Number(load.sales_percentage || 0)) / 100).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={load.status === 'delivered' ? 'default' : 'secondary'}>
-                        {load.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <SalesWorkflowTracker />
       </div>
     </DashboardLayout>
   );
