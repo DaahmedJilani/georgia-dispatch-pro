@@ -1,15 +1,16 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface SMSRequest {
-  to: string;
-  message: string;
-  notificationType?: string;
-}
+const SMSSchema = z.object({
+  to: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number format"),
+  message: z.string().min(1).max(1600, "Message must be between 1 and 1600 characters"),
+  notificationType: z.string().optional(),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -17,7 +18,8 @@ serve(async (req) => {
   }
 
   try {
-    const { to, message, notificationType } = await req.json() as SMSRequest;
+    const body = await req.json();
+    const { to, message, notificationType } = SMSSchema.parse(body);
 
     const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");

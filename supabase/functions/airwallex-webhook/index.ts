@@ -3,8 +3,45 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-signature',
 };
+
+async function verifyWebhookSignature(
+  body: string,
+  signature: string | null,
+  secret: string
+): Promise<boolean> {
+  if (!signature || !secret) {
+    console.warn('Missing signature or secret for webhook verification');
+    return false;
+  }
+
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    
+    const signatureBuffer = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      encoder.encode(body)
+    );
+    
+    const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+    
+    return expectedSignature === signature;
+  } catch (error) {
+    console.error('Signature verification error:', error);
+    return false;
+  }
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -14,9 +51,29 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const webhookSecret = Deno.env.get('AIRWALLEX_WEBHOOK_SECRET');
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const webhookData = await req.json();
+    // Get raw body for signature verification
+    const body = await req.text();
+    const signature = req.headers.get('x-signature');
+
+    // Verify webhook signature if secret is configured
+    if (webhookSecret) {
+      const isValid = await verifyWebhookSignature(body, signature, webhookSecret);
+      if (!isValid) {
+        console.error('Invalid webhook signature');
+        return new Response(
+          JSON.stringify({ error: 'Invalid signature' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      console.log('Webhook signature verified successfully');
+    } else {
+      console.warn('AIRWALLEX_WEBHOOK_SECRET not configured - skipping signature verification');
+    }
+
+    const webhookData = JSON.parse(body);
     console.log('Airwallex webhook received:', JSON.stringify(webhookData));
 
     const { event_type, data } = webhookData;

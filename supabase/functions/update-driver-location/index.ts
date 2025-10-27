@@ -1,20 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface LocationUpdate {
-  driver_id: string;
-  latitude: number;
-  longitude: number;
-  accuracy?: number;
-  heading?: number;
-  speed?: number;
-  load_id?: string;
-}
+const LocationSchema = z.object({
+  driver_id: z.string().uuid(),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  accuracy: z.number().min(0).max(1000).optional(),
+  heading: z.number().min(0).max(360).optional(),
+  speed: z.number().min(0).max(200).optional(),
+  load_id: z.string().uuid().optional(),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -38,8 +39,9 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const body: LocationUpdate = await req.json();
-    const { driver_id, latitude, longitude, accuracy, heading, speed, load_id } = body;
+    const body = await req.json();
+    const locationData = LocationSchema.parse(body);
+    const { driver_id, latitude, longitude, accuracy, heading, speed, load_id } = locationData;
 
     console.log('Processing location update for driver:', driver_id);
 

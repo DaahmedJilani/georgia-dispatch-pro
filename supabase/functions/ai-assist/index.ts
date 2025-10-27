@@ -1,14 +1,25 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface AIAssistRequest {
-  type: "load_summary" | "draft_email" | "smart_reminder";
-  data: any;
-}
+const AIAssistSchema = z.object({
+  type: z.enum(['load_summary', 'draft_email', 'smart_reminder']),
+  data: z.object({
+    pickup_location: z.string().max(500).optional(),
+    delivery_location: z.string().max(500).optional(),
+    commodity: z.string().max(200).optional(),
+    weight: z.number().optional(),
+    pickup_date: z.string().optional(),
+    delivery_date: z.string().optional(),
+    recipient: z.string().max(200).optional(),
+    context: z.string().max(2000).optional(),
+  }).passthrough(),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -16,7 +27,8 @@ serve(async (req) => {
   }
 
   try {
-    const { type, data }: AIAssistRequest = await req.json();
+    const body = await req.json();
+    const { type, data } = AIAssistSchema.parse(body);
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {

@@ -1,10 +1,35 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const TwoFactorSchema = z.object({
+  method: z.enum(['sms', 'email']),
+});
+
+// Rate limiting: track attempts per user
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const userLimit = rateLimitMap.get(userId);
+  
+  if (!userLimit || now > userLimit.resetTime) {
+    rateLimitMap.set(userId, { count: 1, resetTime: now + 300000 }); // 5 minutes
+    return true;
+  }
+  
+  if (userLimit.count >= 5) {
+    return false; // Max 5 codes per 5 minutes
+  }
+  
+  userLimit.count++;
+  return true;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -22,13 +47,22 @@ serve(async (req) => {
       }
     );
 
-    const { method } = await req.json(); // 'sms' or 'email'
-
     // Get user
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
       throw new Error('User not authenticated');
     }
+
+    // Check rate limit
+    if (!checkRateLimit(user.id)) {
+      return new Response(
+        JSON.stringify({ error: 'Too many attempts. Please try again later.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const body = await req.json();
+    const { method } = TwoFactorSchema.parse(body);
 
     // Get user profile
     const { data: profile } = await supabaseClient
