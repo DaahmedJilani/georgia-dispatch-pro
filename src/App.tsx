@@ -7,6 +7,8 @@ import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import { NotificationPermissionPrompt } from "./components/notifications/NotificationPermissionPrompt";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import AboutUs from "./pages/AboutUs";
+import ContactUs from "./pages/ContactUs";
 import Dashboard from "./pages/Dashboard";
 import MasterAdminDashboard from "./pages/MasterAdminDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -44,6 +46,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/contact" element={<ContactUs />} />
           <Route path="/dashboard" element={<Dashboard />} />
           
           {/* Role-Specific Dashboards */}

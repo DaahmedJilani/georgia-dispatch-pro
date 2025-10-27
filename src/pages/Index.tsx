@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Truck, BarChart3, Users, MapPin, FileText, Zap } from "lucide-react";
 import fleetLogo from "@/assets/fleet-logo.png";
+import Navigation from "@/components/Navigation";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -52,6 +53,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      <Navigation />
+      
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-background">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
@@ -67,7 +70,7 @@ const Index = () => {
               Professional dispatch management platform for logistics companies. Multi-tenant SaaS
               solution with real-time tracking, load management, and AI-powered features.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <div className="flex justify-center pt-4">
               <Button
                 size="lg"
                 variant="default"
@@ -75,14 +78,6 @@ const Index = () => {
                 className="text-lg px-8 py-6"
               >
                 Get Started
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => navigate("/auth")}
-                className="text-lg px-8 py-6"
-              >
-                Sign In
               </Button>
             </div>
           </div>
