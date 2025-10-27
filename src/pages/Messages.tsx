@@ -64,8 +64,8 @@ const Messages = () => {
         .from('messages')
         .select(`
           *,
-          sender:sender_id(id, profiles(first_name, last_name)),
-          recipient:recipient_id(id, profiles(first_name, last_name)),
+          sender:profiles!messages_sender_id_fkey(user_id, first_name, last_name),
+          recipient:profiles!messages_recipient_id_fkey(user_id, first_name, last_name),
           loads(load_number)
         `)
         .order('created_at', { ascending: false });
@@ -306,8 +306,8 @@ const Messages = () => {
                               )}
                               <p className="font-semibold">
                                 {view === 'inbox'
-                                  ? `${message.sender.profiles?.first_name} ${message.sender.profiles?.last_name}`
-                                  : `To: ${message.recipient.profiles?.first_name} ${message.recipient.profiles?.last_name}`}
+                                  ? `${message.sender?.first_name} ${message.sender?.last_name}`
+                                  : `To: ${message.recipient?.first_name} ${message.recipient?.last_name}`}
                               </p>
                             </div>
                             <p className="text-sm font-medium text-muted-foreground">
