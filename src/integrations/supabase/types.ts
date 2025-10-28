@@ -325,6 +325,7 @@ export type Database = {
           created_at: string
           dispatcher_id: string
           id: string
+          is_new_activation: boolean | null
           load_id: string
           revenue: number | null
         }
@@ -334,6 +335,7 @@ export type Database = {
           created_at?: string
           dispatcher_id: string
           id?: string
+          is_new_activation?: boolean | null
           load_id: string
           revenue?: number | null
         }
@@ -343,6 +345,7 @@ export type Database = {
           created_at?: string
           dispatcher_id?: string
           id?: string
+          is_new_activation?: boolean | null
           load_id?: string
           revenue?: number | null
         }

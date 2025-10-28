@@ -15,6 +15,7 @@ import {
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateCarrierDialog } from "@/components/carriers/CreateCarrierDialog";
+import { ContractActivationDialog } from "@/components/sales/ContractActivationDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -129,7 +130,7 @@ const Carriers = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead>Name / Status</TableHead>
                 <TableHead>MC Number</TableHead>
                 <TableHead>DOT Number</TableHead>
                 <TableHead>Phone</TableHead>
@@ -153,13 +154,36 @@ const Carriers = () => {
               ) : (
                 carriers.map((carrier) => (
                   <TableRow key={carrier.id}>
-                    <TableCell className="font-medium">{carrier.name}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium">{carrier.name}</span>
+                        <div className="flex gap-2">
+                          {carrier.contract_status === 'signed' && (
+                            <Badge variant="default" className="bg-green-600">Contract Signed</Badge>
+                          )}
+                          {carrier.contract_status === 'sent' && (
+                            <Badge variant="secondary">Pending Signature</Badge>
+                          )}
+                          {carrier.sale_stage === 'closed' && (
+                            <Badge variant="outline">Closed</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell>{carrier.mc_number || "N/A"}</TableCell>
                     <TableCell>{carrier.dot_number || "N/A"}</TableCell>
                     <TableCell>{carrier.phone || "N/A"}</TableCell>
                     <TableCell>{carrier.email || "N/A"}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
+                        <ContractActivationDialog
+                          carrier={{
+                            id: carrier.id,
+                            name: carrier.name,
+                            email: carrier.email || '',
+                          }}
+                          onSuccess={fetchCarriers}
+                        />
                         <Button
                           variant="ghost"
                           size="icon"

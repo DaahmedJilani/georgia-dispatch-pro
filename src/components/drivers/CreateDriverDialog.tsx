@@ -13,9 +13,10 @@ interface CreateDriverDialogProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   companyId: string;
+  carriers?: any[];
 }
 
-export const CreateDriverDialog = ({ open, onOpenChange, onSuccess, companyId }: CreateDriverDialogProps) => {
+export const CreateDriverDialog = ({ open, onOpenChange, onSuccess, companyId, carriers = [] }: CreateDriverDialogProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -27,6 +28,7 @@ export const CreateDriverDialog = ({ open, onOpenChange, onSuccess, companyId }:
     license_expiry: "",
     status: "available",
     notes: "",
+    carrier_id: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,11 +36,15 @@ export const CreateDriverDialog = ({ open, onOpenChange, onSuccess, companyId }:
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { error } = await supabase.from("drivers").insert([
         {
           ...formData,
           company_id: companyId,
           license_expiry: formData.license_expiry || null,
+          carrier_id: formData.carrier_id || null,
+          sales_agent_id: user?.id || null,
         },
       ]);
 
@@ -58,6 +64,7 @@ export const CreateDriverDialog = ({ open, onOpenChange, onSuccess, companyId }:
         license_expiry: "",
         status: "available",
         notes: "",
+        carrier_id: "",
       });
       
       onOpenChange(false);
@@ -120,6 +127,25 @@ export const CreateDriverDialog = ({ open, onOpenChange, onSuccess, companyId }:
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="carrier_id">Carrier *</Label>
+            <Select 
+              value={formData.carrier_id} 
+              onValueChange={(value) => setFormData({ ...formData, carrier_id: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select carrier" />
+              </SelectTrigger>
+              <SelectContent>
+                {carriers.map(carrier => (
+                  <SelectItem key={carrier.id} value={carrier.id}>
+                    {carrier.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

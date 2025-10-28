@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,11 +8,13 @@ const corsHeaders = {
 
 interface InviteDriverRequest {
   email: string;
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   phone?: string;
-  carrier_id?: string;
-  license_number?: string;
+  carrierId: string;
+  licenseNumber?: string;
+  licenseExpiry?: string;
+  companyId: string;
 }
 
 serve(async (req) => {
@@ -21,152 +23,119 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Get authenticated user
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('Missing authorization header');
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      throw new Error('Unauthorized');
-    }
-
-    // Get user's company
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('company_id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!profile?.company_id) {
-      throw new Error('User profile not found');
-    }
-
-    // Verify user is admin or dispatcher
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('company_id', profile.company_id);
-
-    const canInvite = roles?.some(r => ['admin', 'dispatcher', 'sales'].includes(r.role));
-    if (!canInvite) {
-      throw new Error('Only admins, dispatchers, and sales can invite drivers');
-    }
-
-    const body: InviteDriverRequest = await req.json();
-    const { email, first_name, last_name, phone, carrier_id, license_number } = body;
-
-    console.log('Inviting driver:', email);
-
-    // Create auth user with magic link
-    const { data: authData, error: createError } = await supabase.auth.admin.inviteUserByEmail(
-      email,
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
-        data: {
-          first_name,
-          last_name,
-        },
-        redirectTo: `${supabaseUrl}/driver-portal`,
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
       }
     );
 
-    if (createError) {
-      console.error('Error creating auth user:', createError);
-      throw createError;
+    const {
+      email,
+      firstName,
+      lastName,
+      phone,
+      carrierId,
+      licenseNumber,
+      licenseExpiry,
+      companyId
+    }: InviteDriverRequest = await req.json();
+
+    console.log('Inviting driver:', email);
+
+    // Get current user (sales agent)
+    const authHeader = req.headers.get('Authorization')!;
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+
+    if (userError || !user) {
+      throw new Error('Unauthorized');
     }
 
-    const newUserId = authData.user.id;
-    console.log('Auth user created for driver:', newUserId);
+    // Create auth user
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      user_metadata: {
+        first_name: firstName,
+        last_name: lastName,
+      },
+    });
 
-    // Update profile with company_id
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        company_id: profile.company_id,
-        phone: phone || null,
-      })
-      .eq('user_id', newUserId);
-
-    if (profileError) {
-      console.error('Error updating profile:', profileError);
+    if (authError) {
+      console.error('Auth error:', authError);
+      throw authError;
     }
 
-    // Create driver record
-    const { data: driverData, error: driverError } = await supabase
+    console.log('User created:', authData.user.id);
+
+    // Create driver profile
+    const { error: driverError } = await supabaseAdmin
       .from('drivers')
       .insert({
-        user_id: newUserId,
-        company_id: profile.company_id,
-        first_name,
-        last_name,
+        user_id: authData.user.id,
+        first_name: firstName,
+        last_name: lastName,
         email,
         phone: phone || null,
-        carrier_id: carrier_id || null,
-        license_number: license_number || null,
+        carrier_id: carrierId,
+        license_number: licenseNumber || null,
+        license_expiry: licenseExpiry || null,
+        company_id: companyId,
+        sales_agent_id: user.id,
         status: 'available',
-      })
-      .select()
-      .single();
+      });
 
     if (driverError) {
-      console.error('Error creating driver:', driverError);
+      console.error('Driver creation error:', driverError);
       throw driverError;
     }
 
-    console.log('Driver record created:', driverData.id);
-
-    // Create user_roles entry with driver role
-    const { error: roleError } = await supabase
+    // Assign driver role
+    const { error: roleError } = await supabaseAdmin
       .from('user_roles')
       .insert({
-        user_id: newUserId,
-        company_id: profile.company_id,
+        user_id: authData.user.id,
         role: 'driver',
+        company_id: companyId,
       });
 
     if (roleError) {
-      console.error('Error creating driver role:', roleError);
+      console.error('Role assignment error:', roleError);
       throw roleError;
     }
 
-    // Send SMS notification if phone provided
-    if (phone) {
-      try {
-        await supabase.functions.invoke('send-sms-notification', {
-          body: {
-            to: phone,
-            message: `Welcome to the team! Check your email (${email}) for your driver portal access link.`,
-          }
-        });
-      } catch (smsError) {
-        console.error('SMS notification failed:', smsError);
-      }
-    }
+    // Send invitation email (using Supabase's built-in email)
+    const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
 
-    console.log('Driver invited successfully:', driverData.id);
+    if (inviteError) {
+      console.warn('Invite email error:', inviteError);
+      // Don't throw - user is already created
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
-        driver_id: driverData.id,
-        user_id: newUserId,
-        invite_sent: true,
+        userId: authData.user.id,
+        message: 'Driver invited successfully'
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
     );
-
-  } catch (error: any) {
-    console.error('Invite driver error:', error);
+  } catch (error) {
+    console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      }
     );
   }
 });

@@ -15,6 +15,7 @@ interface DispatchStats {
   availableDrivers: number;
   inTransit: number;
   pendingWIP: number;
+  newActivations: number;
 }
 
 interface Driver {
@@ -52,6 +53,7 @@ export default function DispatchDashboard() {
     availableDrivers: 0,
     inTransit: 0,
     pendingWIP: 0,
+    newActivations: 0,
   });
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [activeLoads, setActiveLoads] = useState<Load[]>([]);
@@ -75,7 +77,7 @@ export default function DispatchDashboard() {
 
       if (!profile?.company_id) return;
 
-      const [loadsResult, driversResult, wipResult] = await Promise.all([
+      const [loadsResult, driversResult, wipResult, newActivationsResult] = await Promise.all([
         supabase
           .from('loads')
           .select(`
@@ -95,7 +97,13 @@ export default function DispatchDashboard() {
           .from('wip_assignments')
           .select('id', { count: 'exact' })
           .eq('company_id', profile.company_id)
-          .eq('status', 'pending')
+          .eq('status', 'pending'),
+        supabase
+          .from('dispatch_performance')
+          .select('id', { count: 'exact' })
+          .eq('company_id', profile.company_id)
+          .eq('dispatcher_id', user.id)
+          .eq('is_new_activation', true)
       ]);
 
       const inTransitCount = loadsResult.data?.filter(l => l.status === 'in_transit').length || 0;
@@ -106,6 +114,7 @@ export default function DispatchDashboard() {
         availableDrivers: availableDriversCount,
         inTransit: inTransitCount,
         pendingWIP: wipResult.count || 0,
+        newActivations: newActivationsResult.count || 0,
       });
 
       setDrivers(driversResult.data || []);
@@ -121,6 +130,7 @@ export default function DispatchDashboard() {
     { title: 'Active Loads', value: stats.activeLoads, icon: TruckIcon, color: 'text-blue-600' },
     { title: 'Available Drivers', value: stats.availableDrivers, icon: Users, color: 'text-green-600' },
     { title: 'In Transit', value: stats.inTransit, icon: MapPin, color: 'text-orange-600' },
+    { title: 'New Activations', value: stats.newActivations, icon: Plus, color: 'text-emerald-600' },
     { title: 'Pending WIP', value: stats.pendingWIP, icon: ClipboardList, color: 'text-purple-600' },
   ];
 

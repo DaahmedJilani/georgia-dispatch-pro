@@ -19,6 +19,7 @@ const Settings = () => {
   const [airwallexAccountId, setAirwallexAccountId] = useState<string>("");
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [twoFactorMethod, setTwoFactorMethod] = useState("sms");
+  const [userRole, setUserRole] = useState<string>("");
   const [profile, setProfile] = useState({
     first_name: "",
     last_name: "",
@@ -47,6 +48,17 @@ const Settings = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Fetch role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (roleData) {
+        setUserRole(roleData.role);
+      }
 
       const { data: profileData } = await supabase
         .from("profiles")
@@ -219,10 +231,10 @@ const Settings = () => {
                 onUpdate={fetchSettings}
               />
 
-              <AnalyticsExport />
+              {userRole !== 'driver' && <AnalyticsExport />}
             </div>
 
-            {companyId && (
+            {companyId && userRole === 'admin' && (
               <AirwallexSettings
                 companyId={companyId}
                 initialAccountId={airwallexAccountId}

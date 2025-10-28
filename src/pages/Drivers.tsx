@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateDriverDialog } from "@/components/drivers/CreateDriverDialog";
+import { InviteDriverDialog } from "@/components/drivers/InviteDriverDialog";
 import { DriverMapComponent } from "@/components/map/DriverMapComponent";
 import { ExportButton } from "@/components/shared/ExportButton";
 import {
@@ -35,6 +36,7 @@ const Drivers = () => {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [drivers, setDrivers] = useState<any[]>([]);
+  const [carriers, setCarriers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [companyId, setCompanyId] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -70,13 +72,22 @@ const Drivers = () => {
         setCompanyId(profile.company_id);
       }
 
-      const { data, error } = await supabase
-        .from("drivers")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // Fetch both drivers and carriers
+      const [driversResult, carriersResult] = await Promise.all([
+        supabase
+          .from("drivers")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("carriers")
+          .select("*")
+          .eq("company_id", profile?.company_id)
+          .order("name")
+      ]);
 
-      if (error) throw error;
-      setDrivers(data || []);
+      if (driversResult.error) throw driversResult.error;
+      setDrivers(driversResult.data || []);
+      setCarriers(carriersResult.data || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -153,6 +164,7 @@ const Drivers = () => {
               a.download = `drivers-${new Date().toISOString().split('T')[0]}.csv`;
               a.click();
             }} label="Export" />
+            <InviteDriverDialog companyId={companyId} onSuccess={fetchDrivers} />
             <Button onClick={() => setCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Add Driver
@@ -237,6 +249,7 @@ const Drivers = () => {
         onOpenChange={setCreateDialogOpen}
         onSuccess={fetchDrivers}
         companyId={companyId}
+        carriers={carriers}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

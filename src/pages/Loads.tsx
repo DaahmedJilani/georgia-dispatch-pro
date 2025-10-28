@@ -24,6 +24,7 @@ const Loads = () => {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedLoadId, setSelectedLoadId] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string>("");
+  const [userRole, setUserRole] = useState<string>("");
 
   useEffect(() => {
     fetchData();
@@ -43,6 +44,17 @@ const Loads = () => {
       if (!profile?.company_id) return;
 
       setCompanyId(profile.company_id);
+
+      // Fetch user role
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (roleData) {
+        setUserRole(roleData.role);
+      }
 
       // Fetch all data in parallel
       const [loadsRes, driversRes, brokersRes, carriersRes] = await Promise.all([
@@ -144,10 +156,12 @@ const Loads = () => {
               a.download = `loads-${new Date().toISOString().split('T')[0]}.csv`;
               a.click();
             }} label="Export" />
-            <Button className="gap-2" onClick={() => setCreateDialogOpen(true)}>
-              <Plus className="w-4 h-4" />
-              Create Load
-            </Button>
+            {userRole !== 'driver' && (
+              <Button className="gap-2" onClick={() => setCreateDialogOpen(true)}>
+                <Plus className="w-4 h-4" />
+                Create Load
+              </Button>
+            )}
           </div>
         </div>
 
