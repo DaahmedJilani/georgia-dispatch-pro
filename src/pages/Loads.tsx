@@ -9,6 +9,7 @@ import { Plus, Search, Filter, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import CreateLoadDialog from "@/components/loads/CreateLoadDialog";
 import LoadDetailsDialog from "@/components/loads/LoadDetailsDialog";
+import { ExportButton } from "@/components/shared/ExportButton";
 
 const Loads = () => {
   const { toast } = useToast();
@@ -122,10 +123,32 @@ const Loads = () => {
             <h1 className="text-3xl font-bold tracking-tight">Loads</h1>
             <p className="text-muted-foreground">Manage and track all your shipments</p>
           </div>
-          <Button className="gap-2" onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Create Load
-          </Button>
+          <div className="flex gap-2">
+            <ExportButton onExport={() => {
+              const csvContent = [
+                ['Load Number', 'Pickup', 'Delivery', 'Status', 'Rate', 'Driver', 'Broker'].join(','),
+                ...filteredLoads.map(load => [
+                  load.load_number,
+                  `"${load.pickup_city}, ${load.pickup_state}"`,
+                  `"${load.delivery_city}, ${load.delivery_state}"`,
+                  load.status,
+                  load.rate || '',
+                  load.drivers ? `"${load.drivers.first_name} ${load.drivers.last_name}"` : '',
+                  load.brokers ? `"${load.brokers.name}"` : ''
+                ].join(','))
+              ].join('\n');
+              const blob = new Blob([csvContent], { type: 'text/csv' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `loads-${new Date().toISOString().split('T')[0]}.csv`;
+              a.click();
+            }} label="Export" />
+            <Button className="gap-2" onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Create Load
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters */}

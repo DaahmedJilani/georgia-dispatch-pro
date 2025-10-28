@@ -5,7 +5,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { BarChart3, TrendingUp, DollarSign, Truck, Users, Package } from "lucide-react";
-import { AnalyticsExport } from "@/components/analytics/AnalyticsExport";
+import { ExportButton } from "@/components/shared/ExportButton";
 
 const Analytics = () => {
   const navigate = useNavigate();
@@ -176,7 +176,15 @@ const Analytics = () => {
             <h1 className="text-3xl font-bold">Analytics</h1>
             <p className="text-muted-foreground">Business intelligence and performance metrics</p>
           </div>
-          <AnalyticsExport />
+          <ExportButton onExport={() => {
+            const csvData = JSON.stringify(analytics, null, 2);
+            const blob = new Blob([csvData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analytics-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+          }} label="Export Analytics" />
         </div>
 
         {/* Key Metrics */}

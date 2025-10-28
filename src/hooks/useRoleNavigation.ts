@@ -56,7 +56,6 @@ export function useRoleNavigation() {
     { label: 'Dashboard', path: '/treasury-dashboard' },
     { label: 'Invoices', path: '/invoices' },
     { label: 'Documents', path: '/documents' },
-    { label: 'Messages', path: '/messages' },
     { label: 'Settings', path: '/settings' },
   ];
 

@@ -18,6 +18,7 @@ import { Plus, Pencil, Trash2, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateDriverDialog } from "@/components/drivers/CreateDriverDialog";
 import { DriverMapComponent } from "@/components/map/DriverMapComponent";
+import { ExportButton } from "@/components/shared/ExportButton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -133,10 +134,30 @@ const Drivers = () => {
             <h1 className="text-3xl font-bold">Drivers</h1>
             <p className="text-muted-foreground">Manage your fleet drivers</p>
           </div>
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Driver
-          </Button>
+          <div className="flex gap-2">
+            <ExportButton onExport={() => {
+              const csvContent = [
+                ['Name', 'Phone', 'Email', 'License', 'Status'].join(','),
+                ...drivers.map(driver => [
+                  `"${driver.first_name} ${driver.last_name}"`,
+                  driver.phone || '',
+                  driver.email || '',
+                  driver.license_number || '',
+                  driver.status
+                ].join(','))
+              ].join('\n');
+              const blob = new Blob([csvContent], { type: 'text/csv' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `drivers-${new Date().toISOString().split('T')[0]}.csv`;
+              a.click();
+            }} label="Export" />
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Driver
+            </Button>
+          </div>
         </div>
 
         <Card>
