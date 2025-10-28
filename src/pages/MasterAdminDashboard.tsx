@@ -6,7 +6,7 @@ import { Building2, Users, TruckIcon, DollarSign } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { SeedTestUsersButton } from '@/components/admin/SeedTestUsersButton';
+import { useNavigate } from 'react-router-dom';
 
 interface CompanyStats {
   id: string;
@@ -19,6 +19,7 @@ interface CompanyStats {
 }
 
 export default function MasterAdminDashboard() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [companies, setCompanies] = useState<CompanyStats[]>([]);
   const [totalCompanies, setTotalCompanies] = useState(0);
@@ -107,7 +108,9 @@ export default function MasterAdminDashboard() {
             </Badge>
           </div>
           <div className="flex gap-2">
-            <SeedTestUsersButton />
+            <Button variant="default" onClick={() => navigate('/subscriptions')}>
+              Subscription Management
+            </Button>
             <Button variant="outline">
               <Building2 className="mr-2 h-4 w-4" />
               Add Company

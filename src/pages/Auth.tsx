@@ -57,12 +57,23 @@ const Auth = () => {
         }
       } else {
         // Email-based login for drivers
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data: authData, error } = await supabase.auth.signInWithPassword({
           email: loginData.email,
           password: loginData.password,
         });
 
         if (error) throw error;
+
+        // Check subscription status before allowing login
+        const { data: subscriptionCheck } = await supabase.functions.invoke(
+          'check-company-subscription',
+          { body: { userId: authData.user.id } }
+        );
+
+        if (subscriptionCheck && !subscriptionCheck.allowed) {
+          await supabase.auth.signOut();
+          throw new Error(subscriptionCheck.message || 'Access suspended due to subscription issues');
+        }
 
         toast({
           title: "Success",

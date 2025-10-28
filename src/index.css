@@ -12,6 +12,12 @@ All colors MUST be HSL.
     --background: 0 10% 97%;
     --foreground: 357 32% 30%;
 
+    /* AI-themed colors for holographic effects */
+    --ai-cyan: 187 100% 50%;
+    --ai-purple: 271 76% 64%;
+    --ai-pink: 333 79% 58%;
+    --ai-glow: 187 100% 50%;
+
     --card: 0 0% 100%;
     --card-foreground: 357 32% 30%;
 
@@ -69,6 +75,7 @@ All colors MUST be HSL.
     --gradient-admin: linear-gradient(135deg, hsl(357 32% 30%), hsl(10 33% 96%));
     --gradient-driver: linear-gradient(135deg, hsl(210 50% 55%), hsl(210 50% 65%));
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(10 33% 96%));
+    --gradient-holographic: linear-gradient(135deg, hsl(187 100% 50%), hsl(271 76% 64%), hsl(333 79% 58%));
 
     /* Shadows */
     --shadow-sm: 0 2px 8px -2px hsl(357 32% 30% / 0.08);
@@ -77,6 +84,7 @@ All colors MUST be HSL.
     --shadow-glow-sales: 0 0 24px hsl(353 49% 75% / 0.3);
     --shadow-glow-dispatch: 0 0 24px hsl(30 60% 50% / 0.3);
     --shadow-glow-treasury: 0 0 24px hsl(45 100% 65% / 0.3);
+    --shadow-glow-ai: 0 0 40px hsl(187 100% 50% / 0.4);
 
     /* Sidebar */
     --sidebar-background: 210 56% 10%;
@@ -158,6 +166,35 @@ All colors MUST be HSL.
 @layer utilities {
   .glass-card {
     @apply bg-white/80 backdrop-blur-sm border border-border/50 shadow-md;
+  }
+
+  .holographic-bg {
+    background: linear-gradient(
+      135deg,
+      rgba(0, 229, 255, 0.1),
+      rgba(168, 85, 247, 0.1),
+      rgba(236, 72, 153, 0.1)
+    );
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+  }
+
+  .glass-morphism {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
+  .neon-text {
+    text-shadow: 
+      0 0 10px hsl(var(--ai-cyan)),
+      0 0 20px hsl(var(--ai-cyan)),
+      0 0 30px hsl(var(--ai-cyan));
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
   }
 
   .gradient-primary {

@@ -5,6 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Truck, BarChart3, Users, MapPin, FileText, Zap } from "lucide-react";
 import fleetLogo from "@/assets/fleet-logo.png";
 import Navigation from "@/components/Navigation";
+import { ParticleBackground } from "@/components/3d/ParticleBackground";
+import { HolographicCard } from "@/components/3d/HolographicCard";
+import { HolographicText } from "@/components/3d/HolographicText";
+import { GlowButton } from "@/components/3d/GlowButton";
+import { motion } from "framer-motion";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -52,17 +57,28 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      <ParticleBackground />
       <Navigation />
       
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-background">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
         <div className="container relative mx-auto px-4 py-24 lg:py-32">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
+          <motion.div 
+            className="max-w-4xl mx-auto text-center space-y-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
             <div className="inline-flex items-center justify-center mb-6">
-              <img src={fleetLogo} alt="Fleet by Georgia Industrials Logo" className="w-48 h-48 object-contain" />
+              <motion.img 
+                src={fleetLogo} 
+                alt="Fleet by Georgia Industrials Logo" 
+                className="w-48 h-48 object-contain animate-float"
+                whileHover={{ scale: 1.05 }}
+              />
             </div>
+            <HolographicText text="Fleet by Georgia Industrials" className="text-5xl lg:text-6xl" as="h1" />
             <p className="text-xl lg:text-2xl text-foreground/80 max-w-2xl mx-auto">
               Smart Dispatch. Simplified.
             </p>
@@ -71,16 +87,16 @@ const Index = () => {
               solution with real-time tracking, load management, and AI-powered features.
             </p>
             <div className="flex justify-center pt-4">
-              <Button
+              <GlowButton
                 size="lg"
-                variant="default"
                 onClick={() => navigate("/auth")}
                 className="text-lg px-8 py-6"
+                glowColor="cyan"
               >
                 Get Started
-              </Button>
+              </GlowButton>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -97,19 +113,24 @@ const Index = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {features.map((feature) => {
+            {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div
-                  key={feature.title}
-                  className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6 transition-smooth hover:bg-white/15 hover:shadow-lg group"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4 group-hover:bg-white/30 transition-smooth">
-                    <Icon className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-white">{feature.title}</h3>
-                  <p className="text-white/70">{feature.description}</p>
-                </div>
+                <HolographicCard key={feature.title}>
+                  <motion.div
+                    className="p-6"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1, duration: 0.5 }}
+                  >
+                    <div className="w-12 h-12 mb-4 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 p-2 animate-glow-pulse">
+                      <Icon className="w-full h-full text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-3 text-white">{feature.title}</h3>
+                    <p className="text-white/80">{feature.description}</p>
+                  </motion.div>
+                </HolographicCard>
               );
             })}
           </div>

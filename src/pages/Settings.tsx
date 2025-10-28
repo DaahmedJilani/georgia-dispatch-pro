@@ -10,6 +10,12 @@ import { useToast } from "@/hooks/use-toast";
 import AirwallexSettings from "@/components/settings/AirwallexSettings";
 import { TwoFactorSetup } from "@/components/auth/TwoFactorSetup";
 import { AnalyticsExport } from "@/components/analytics/AnalyticsExport";
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
+import { formatDate, formatCurrency, getStatusBadgeVariant } from "@/lib/subscription-utils";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -19,7 +25,8 @@ const Settings = () => {
   const [airwallexAccountId, setAirwallexAccountId] = useState<string>("");
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [twoFactorMethod, setTwoFactorMethod] = useState("sms");
-  const [userRole, setUserRole] = useState<string>("");
+  const subscription = useSubscriptionStatus();
+  const { role: userRole, isMasterAdmin } = useUserRole();
   const [profile, setProfile] = useState({
     first_name: "",
     last_name: "",
@@ -48,17 +55,6 @@ const Settings = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
-      // Fetch role
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
-      if (roleData) {
-        setUserRole(roleData.role);
-      }
 
       const { data: profileData } = await supabase
         .from("profiles")
@@ -223,6 +219,57 @@ const Settings = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Subscription Status (for Company Admins) */}
+            {userRole === 'admin' && !isMasterAdmin && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Subscription Status</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {subscription.loading ? (
+                    <div className="text-center py-4">Loading subscription status...</div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium">Status:</span>
+                        <Badge variant={getStatusBadgeVariant(subscription.status || 'pending')}>
+                          {subscription.status}
+                        </Badge>
+                      </div>
+                      {subscription.dueDate && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Next Payment Due:</span>
+                          <span className="font-semibold">{formatDate(subscription.dueDate)}</span>
+                        </div>
+                      )}
+                      {subscription.amount && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Amount:</span>
+                          <span className="font-semibold">{formatCurrency(subscription.amount)}</span>
+                        </div>
+                      )}
+                      {subscription.lastPayment && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">Last Payment:</span>
+                          <span>{formatDate(subscription.lastPayment)}</span>
+                        </div>
+                      )}
+                      {subscription.status === 'suspended' && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertTitle>Access Suspended</AlertTitle>
+                          <AlertDescription>
+                            Your company's access has been suspended due to non-payment. 
+                            Please contact the master administrator to resolve this issue.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             <div className="grid gap-6 md:grid-cols-2">
               <TwoFactorSetup

@@ -284,10 +284,16 @@ export type Database = {
           docusign_enabled: boolean | null
           email: string | null
           id: string
+          last_payment_date: string | null
           logo_url: string | null
           name: string
+          payment_reminder_sent: boolean | null
           phone: string | null
+          subscription_amount: number | null
+          subscription_due_date: string | null
+          subscription_payment_status: string | null
           subscription_status: string | null
+          suspension_date: string | null
           updated_at: string
         }
         Insert: {
@@ -297,10 +303,16 @@ export type Database = {
           docusign_enabled?: boolean | null
           email?: string | null
           id?: string
+          last_payment_date?: string | null
           logo_url?: string | null
           name: string
+          payment_reminder_sent?: boolean | null
           phone?: string | null
+          subscription_amount?: number | null
+          subscription_due_date?: string | null
+          subscription_payment_status?: string | null
           subscription_status?: string | null
+          suspension_date?: string | null
           updated_at?: string
         }
         Update: {
@@ -310,10 +322,16 @@ export type Database = {
           docusign_enabled?: boolean | null
           email?: string | null
           id?: string
+          last_payment_date?: string | null
           logo_url?: string | null
           name?: string
+          payment_reminder_sent?: boolean | null
           phone?: string | null
+          subscription_amount?: number | null
+          subscription_due_date?: string | null
+          subscription_payment_status?: string | null
           subscription_status?: string | null
+          suspension_date?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1246,6 +1264,53 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      subscription_payments: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string | null
+          status: string | null
+          transaction_id: string | null
+        }
+        Insert: {
+          amount: number
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_date: string
+          payment_method?: string | null
+          status?: string | null
+          transaction_id?: string | null
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string | null
+          status?: string | null
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
           },
         ]
       }

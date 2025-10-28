@@ -83,10 +83,30 @@ export default {
             height: "0",
           },
         },
+        "gradient-shift": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        "glow-pulse": {
+          "0%, 100%": { boxShadow: "0 0 20px rgba(0,229,255,0.5)" },
+          "50%": { boxShadow: "0 0 60px rgba(0,229,255,1)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-20px)" },
+        },
+        "hologram-scan": {
+          "0%": { backgroundPosition: "0% 0%" },
+          "100%": { backgroundPosition: "0% 100%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "gradient-shift": "gradient-shift 3s ease infinite",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        float: "float 3s ease-in-out infinite",
+        "hologram-scan": "hologram-scan 2s linear infinite",
       },
     },
   },

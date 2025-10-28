@@ -30,6 +30,7 @@ import Analytics from "./pages/Analytics";
 import AuditLogs from "./pages/AuditLogs";
 import Messages from "./pages/Messages";
 import Settings from "./pages/Settings";
+import SubscriptionManagement from "./pages/SubscriptionManagement";
 import NotFound from "./pages/NotFound";
 import { RoleGuard } from "./components/RoleGuard";
 
@@ -60,6 +61,7 @@ const App = () => (
           {/* Management Pages */}
           <Route path="/team" element={<RoleGuard allowedRoles={['admin']}><TeamManagement /></RoleGuard>} />
           <Route path="/companies" element={<RoleGuard allowedRoles={['master_admin']}><CompaniesManagement /></RoleGuard>} />
+          <Route path="/subscriptions" element={<RoleGuard allowedRoles={['master_admin']}><SubscriptionManagement /></RoleGuard>} />
           
           {/* Shared Pages */}
           <Route path="/loads" element={<Loads />} />
