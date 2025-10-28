@@ -19,6 +19,7 @@ export function InviteTeamMemberDialog({ open, onOpenChange, onSuccess }: Invite
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
   const [role, setRole] = useState<string>('dispatcher');
 
   const handleInvite = async () => {
@@ -31,14 +32,25 @@ export function InviteTeamMemberDialog({ open, onOpenChange, onSuccess }: Invite
       return;
     }
 
+    // Username is required for non-driver roles
+    if (role !== 'driver' && !username) {
+      toast({
+        title: 'Username Required',
+        description: 'Username is required for internal staff',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase.functions.invoke('invite-team-member', {
         body: {
           email,
-          firstName,
-          lastName,
+          first_name: firstName,
+          last_name: lastName,
           role,
+          username: username || null,
         },
       });
 
@@ -52,6 +64,7 @@ export function InviteTeamMemberDialog({ open, onOpenChange, onSuccess }: Invite
       setEmail('');
       setFirstName('');
       setLastName('');
+      setUsername('');
       setRole('dispatcher');
       onOpenChange(false);
       onSuccess();
@@ -100,6 +113,26 @@ export function InviteTeamMemberDialog({ open, onOpenChange, onSuccess }: Invite
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
             />
+          </div>
+          <div>
+            <Label htmlFor="username">Username {role !== 'driver' && <span className="text-destructive">*</span>}</Label>
+            <Input
+              id="username"
+              placeholder="john_dispatcher"
+              value={username}
+              onChange={(e) => setUsername(e.target.value.toLowerCase())}
+              disabled={role === 'driver'}
+            />
+            {role !== 'driver' && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Username for login (letters, numbers, underscores only)
+              </p>
+            )}
+            {role === 'driver' && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Drivers login with email, not username
+              </p>
+            )}
           </div>
           <div>
             <Label htmlFor="role">Role</Label>

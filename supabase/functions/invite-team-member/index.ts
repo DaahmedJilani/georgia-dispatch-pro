@@ -12,6 +12,7 @@ interface InviteRequest {
   first_name?: string;
   last_name?: string;
   phone?: string;
+  username?: string;
 }
 
 serve(async (req) => {
@@ -59,9 +60,9 @@ serve(async (req) => {
     }
 
     const body: InviteRequest = await req.json();
-    const { email, role, first_name, last_name, phone } = body;
+    const { email, role, first_name, last_name, phone, username } = body;
 
-    console.log('Inviting team member:', email, 'with role:', role);
+    console.log('Inviting team member:', email, 'with role:', role, 'username:', username);
 
     // Create auth user with magic link
     const { data: authData, error: createError } = await supabase.auth.admin.inviteUserByEmail(
@@ -83,17 +84,19 @@ serve(async (req) => {
     const newUserId = authData.user.id;
     console.log('Auth user created:', newUserId);
 
-    // Update profile with company_id
+    // Update profile with company_id and username
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
         company_id: profile.company_id,
         phone: phone || null,
+        username: username ? username.toLowerCase() : null,
       })
       .eq('user_id', newUserId);
 
     if (profileError) {
       console.error('Error updating profile:', profileError);
+      throw profileError;
     }
 
     // Create user_roles entry

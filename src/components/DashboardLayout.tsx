@@ -130,7 +130,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     if (role === 'sales') {
       return [
         { icon: LayoutDashboard, label: "Dashboard", path: "/sales-dashboard", roles: [] },
-        { icon: Package, label: "My Loads", path: "/loads", roles: [] },
         { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
         { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
         { icon: FileText, label: "Documents", path: "/documents", roles: [] },
@@ -145,8 +144,10 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         { icon: LayoutDashboard, label: "Dashboard", path: "/dispatch-dashboard", roles: [] },
         { icon: Package, label: "Loads", path: "/loads", roles: [] },
         { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
+        { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
         { icon: Navigation, label: "Fleet Map", path: "/fleet-map", roles: [] },
         { icon: FileText, label: "Documents", path: "/documents", roles: [] },
+        { icon: MessageCircle, label: "Messages", path: "/messages", roles: [] },
         { icon: Settings, label: "Settings", path: "/settings", roles: [] },
       ];
     }
@@ -156,7 +157,19 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       return [
         { icon: LayoutDashboard, label: "Dashboard", path: "/treasury-dashboard", roles: [] },
         { icon: DollarSign, label: "Invoices", path: "/invoices", roles: [] },
+        { icon: FileText, label: "Documents", path: "/documents", roles: [] },
         { icon: BarChart3, label: "Reports", path: "/analytics", roles: [] },
+        { icon: Settings, label: "Settings", path: "/settings", roles: [] },
+      ];
+    }
+
+    // Driver Portal
+    if (role === 'driver') {
+      return [
+        { icon: LayoutDashboard, label: "Dashboard", path: "/driver-portal", roles: [] },
+        { icon: Package, label: "My Loads", path: "/loads", roles: [] },
+        { icon: FileText, label: "Documents", path: "/documents", roles: [] },
+        { icon: MessageCircle, label: "Messages", path: "/messages", roles: [] },
         { icon: Settings, label: "Settings", path: "/settings", roles: [] },
       ];
     }

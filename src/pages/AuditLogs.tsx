@@ -30,7 +30,7 @@ const AuditLogs = () => {
         .from("audit_logs")
         .select(`
           *,
-          profiles!audit_logs_user_id_fkey(first_name, last_name)
+          profiles!audit_logs_user_id_fkey(first_name, last_name, username)
         `)
         .order("created_at", { ascending: false })
         .limit(100);
@@ -192,7 +192,11 @@ const AuditLogs = () => {
                                 <>
                                   by{" "}
                                   <span className="font-medium">
-                                    {log.profiles.first_name} {log.profiles.last_name}
+                                    {log.profiles.username ? (
+                                      <span className="font-mono">{log.profiles.username}</span>
+                                    ) : (
+                                      `${log.profiles.first_name} ${log.profiles.last_name}`
+                                    )}
                                   </span>
                                 </>
                               ) : (

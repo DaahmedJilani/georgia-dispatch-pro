@@ -5,16 +5,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, UserCog } from 'lucide-react';
+import { Plus, UserCog, Key, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { InviteTeamMemberDialog } from '@/components/team/InviteTeamMemberDialog';
 import { RoleAssignmentDialog } from '@/components/team/RoleAssignmentDialog';
+import { ResetUserPasswordDialog } from '@/components/admin/ResetUserPasswordDialog';
+import { EditUsernameDialog } from '@/components/admin/EditUsernameDialog';
 
 interface TeamMember {
   id: string;
+  user_id: string;
   first_name: string;
   last_name: string;
   email: string;
+  username: string | null;
   role: string;
   created_at: string;
 }
@@ -25,7 +29,16 @@ export default function TeamManagement() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<{ id: string; role?: string } | null>(null);
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [editUsernameDialogOpen, setEditUsernameDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ 
+    id: string; 
+    user_id: string;
+    role?: string;
+    email: string;
+    name: string;
+    username: string | null;
+  } | null>(null);
 
   useEffect(() => {
     fetchTeamMembers();
@@ -48,9 +61,10 @@ export default function TeamManagement() {
         .from('profiles')
         .select(`
           id,
+          user_id,
           first_name,
           last_name,
-          user_id,
+          username,
           created_at,
           user_roles!inner(role)
         `)
@@ -64,8 +78,10 @@ export default function TeamManagement() {
             const { data: authUser } = await supabase.auth.admin.getUserById(member.user_id);
             return {
               id: member.id,
+              user_id: member.user_id,
               first_name: member.first_name || 'N/A',
               last_name: member.last_name || 'N/A',
+              username: member.username,
               email: authUser?.user?.email || 'N/A',
               role: member.user_roles[0]?.role || 'N/A',
               created_at: member.created_at
@@ -119,10 +135,10 @@ export default function TeamManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Username</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Joined</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -131,6 +147,33 @@ export default function TeamManagement() {
                   <TableRow key={member.id}>
                     <TableCell className="font-medium">
                       {member.first_name} {member.last_name}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {member.username ? (
+                          <span className="font-mono text-sm">{member.username}</span>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No username</span>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => {
+                            setSelectedUser({ 
+                              id: member.id, 
+                              user_id: member.user_id,
+                              role: member.role,
+                              email: member.email,
+                              name: `${member.first_name} ${member.last_name}`,
+                              username: member.username
+                            });
+                            setEditUsernameDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </TableCell>
                     <TableCell>{member.email}</TableCell>
                     <TableCell>
@@ -150,19 +193,44 @@ export default function TeamManagement() {
                     </TableCell>
                     <TableCell>{new Date(member.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <Badge variant="default">Active</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser({ id: member.id, role: member.role });
-                          setRoleDialogOpen(true);
-                        }}
-                      >
-                        <UserCog className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser({ 
+                              id: member.id, 
+                              user_id: member.user_id,
+                              role: member.role,
+                              email: member.email,
+                              name: `${member.first_name} ${member.last_name}`,
+                              username: member.username
+                            });
+                            setRoleDialogOpen(true);
+                          }}
+                          title="Change Role"
+                        >
+                          <UserCog className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser({ 
+                              id: member.id, 
+                              user_id: member.user_id,
+                              role: member.role,
+                              email: member.email,
+                              name: `${member.first_name} ${member.last_name}`,
+                              username: member.username
+                            });
+                            setResetPasswordDialogOpen(true);
+                          }}
+                          title="Reset Password"
+                        >
+                          <Key className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -178,13 +246,29 @@ export default function TeamManagement() {
       />
 
       {selectedUser && (
-        <RoleAssignmentDialog
-          open={roleDialogOpen}
-          onOpenChange={setRoleDialogOpen}
-          userId={selectedUser.id}
-          currentRole={selectedUser.role}
-          onSuccess={fetchTeamMembers}
-        />
+        <>
+          <RoleAssignmentDialog
+            open={roleDialogOpen}
+            onOpenChange={setRoleDialogOpen}
+            userId={selectedUser.id}
+            currentRole={selectedUser.role}
+            onSuccess={fetchTeamMembers}
+          />
+          <ResetUserPasswordDialog
+            open={resetPasswordDialogOpen}
+            onOpenChange={setResetPasswordDialogOpen}
+            userId={selectedUser.user_id}
+            userEmail={selectedUser.email}
+            userName={selectedUser.name}
+          />
+          <EditUsernameDialog
+            open={editUsernameDialogOpen}
+            onOpenChange={setEditUsernameDialogOpen}
+            userId={selectedUser.user_id}
+            currentUsername={selectedUser.username}
+            onSuccess={fetchTeamMembers}
+          />
+        </>
       )}
       </div>
     </DashboardLayout>

@@ -7,14 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { Switch } from "@/components/ui/switch";
 import fleetLogo from "@/assets/fleet-logo.png";
 
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [useUsernameLogin, setUseUsernameLogin] = useState(false);
 
-  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [loginData, setLoginData] = useState({ email: "", password: "", username: "" });
   const [signupData, setSignupData] = useState({
     email: "",
     password: "",
@@ -28,23 +30,51 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: loginData.email,
-        password: loginData.password,
-      });
+      if (useUsernameLogin) {
+        // Username-based login for internal staff
+        if (!loginData.username || !loginData.password) {
+          throw new Error("Username and password are required");
+        }
 
-      if (error) throw error;
+        const { data, error } = await supabase.functions.invoke('authenticate-with-username', {
+          body: {
+            username: loginData.username,
+            password: loginData.password,
+          },
+        });
 
-      toast({
-        title: "Success",
-        description: "Logged in successfully",
-      });
-      navigate("/dashboard");
+        if (error) throw error;
+
+        if (data.session) {
+          await supabase.auth.setSession(data.session);
+          toast({
+            title: "Success",
+            description: "Logged in successfully",
+          });
+          navigate("/dashboard");
+        } else {
+          throw new Error("Authentication failed");
+        }
+      } else {
+        // Email-based login for drivers
+        const { error } = await supabase.auth.signInWithPassword({
+          email: loginData.email,
+          password: loginData.password,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Logged in successfully",
+        });
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error.message || "Login failed",
       });
     } finally {
       setLoading(false);
@@ -127,17 +157,49 @@ const Auth = () => {
 
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="you@company.com"
-                      value={loginData.email}
-                      onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                      required
+                  <div className="flex items-center justify-between mb-4">
+                    <Label htmlFor="username-toggle" className="text-sm">
+                      Use Username Login (Staff)
+                    </Label>
+                    <Switch
+                      id="username-toggle"
+                      checked={useUsernameLogin}
+                      onCheckedChange={setUseUsernameLogin}
                     />
                   </div>
+
+                  {useUsernameLogin ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="login-username">Username</Label>
+                      <Input
+                        id="login-username"
+                        type="text"
+                        placeholder="your_username"
+                        value={loginData.username}
+                        onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        For Sales, Dispatch, and Treasury staff
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email">Email</Label>
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="you@company.com"
+                        value={loginData.email}
+                        onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        For Drivers and Admins
+                      </p>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label htmlFor="login-password">Password</Label>
                     <Input
