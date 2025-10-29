@@ -7,8 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate, formatCurrency, getStatusBadgeVariant, getDaysUntilDue } from '@/lib/subscription-utils';
-import { AlertCircle, CheckCircle, Clock, Ban, Mail } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, Ban, ArrowUpCircle } from 'lucide-react';
 import { HolographicCard } from '@/components/3d/HolographicCard';
+import { TierBadge } from '@/components/subscription/TierBadge';
+import { FeatureList } from '@/components/subscription/FeatureList';
+import { UpgradeDowngradeDialog } from '@/components/subscription/UpgradeDowngradeDialog';
 
 interface CompanySubscription {
   id: string;
@@ -17,24 +20,27 @@ interface CompanySubscription {
   subscription_due_date: string;
   last_payment_date: string | null;
   subscription_amount: number;
+  subscription_tier: 'basic' | 'pro';
 }
 
 export default function SubscriptionManagement() {
   const [companies, setCompanies] = useState<CompanySubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ paid: 0, pending: 0, overdue: 0, suspended: 0 });
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<CompanySubscription | null>(null);
   const { toast } = useToast();
 
   const fetchCompanies = async () => {
     try {
       const { data, error } = await supabase
         .from('companies')
-        .select('id, name, subscription_payment_status, subscription_due_date, last_payment_date, subscription_amount')
+        .select('id, name, subscription_payment_status, subscription_due_date, last_payment_date, subscription_amount, subscription_tier')
         .order('name');
 
       if (error) throw error;
 
-      setCompanies(data || []);
+      setCompanies((data || []) as CompanySubscription[]);
 
       // Calculate stats
       const statsData = {
@@ -158,6 +164,11 @@ export default function SubscriptionManagement() {
     }
   };
 
+  const handleChangeTier = (company: CompanySubscription) => {
+    setSelectedCompany(company);
+    setUpgradeDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -241,6 +252,7 @@ export default function SubscriptionManagement() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Company</TableHead>
+                    <TableHead>Tier</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Due Date</TableHead>
                     <TableHead>Days Remaining</TableHead>
@@ -255,6 +267,9 @@ export default function SubscriptionManagement() {
                     return (
                       <TableRow key={company.id}>
                         <TableCell className="font-medium">{company.name}</TableCell>
+                        <TableCell>
+                          <TierBadge tier={company.subscription_tier} />
+                        </TableCell>
                         <TableCell>
                           <Badge variant={getStatusBadgeVariant(company.subscription_payment_status)}>
                             {company.subscription_payment_status}
@@ -271,7 +286,15 @@ export default function SubscriptionManagement() {
                           {company.last_payment_date ? formatDate(company.last_payment_date) : 'Never'}
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleChangeTier(company)}
+                            >
+                              <ArrowUpCircle className="mr-1 h-3 w-3" />
+                              Change Tier
+                            </Button>
                             {company.subscription_payment_status !== 'paid' && (
                               <Button
                                 size="sm"
@@ -309,6 +332,17 @@ export default function SubscriptionManagement() {
           </Card>
         </HolographicCard>
       </div>
+
+      {selectedCompany && (
+        <UpgradeDowngradeDialog
+          open={upgradeDialogOpen}
+          onOpenChange={setUpgradeDialogOpen}
+          companyId={selectedCompany.id}
+          currentTier={selectedCompany.subscription_tier}
+          companyName={selectedCompany.name}
+          onSuccess={fetchCompanies}
+        />
+      )}
     </DashboardLayout>
   );
 }
