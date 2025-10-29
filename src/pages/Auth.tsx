@@ -47,11 +47,40 @@ const Auth = () => {
 
         if (data.session) {
           await supabase.auth.setSession(data.session);
+          
+          // Get user role and redirect to correct dashboard
+          const userId = data.session.user.id;
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_master_admin, company_id')
+            .eq('user_id', userId)
+            .single();
+
+          const { data: userRole } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId)
+            .single();
+
+          let dashboardPath = '/dashboard';
+
+          if (profile?.is_master_admin) {
+            dashboardPath = '/master-admin';
+          } else if (userRole?.role === 'admin') {
+            dashboardPath = '/admin-dashboard';
+          } else if (userRole?.role === 'sales') {
+            dashboardPath = '/sales-dashboard';
+          } else if (userRole?.role === 'dispatcher') {
+            dashboardPath = '/dispatch-dashboard';
+          } else if (userRole?.role === 'treasury') {
+            dashboardPath = '/treasury-dashboard';
+          }
+
           toast({
             title: "Success",
             description: "Logged in successfully",
           });
-          navigate("/dashboard");
+          navigate(dashboardPath);
         } else {
           throw new Error("Authentication failed");
         }
@@ -75,11 +104,49 @@ const Auth = () => {
           throw new Error(subscriptionCheck.message || 'Access suspended due to subscription issues');
         }
 
+        // Get user role and redirect to correct dashboard
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_master_admin, company_id')
+          .eq('user_id', authData.user.id)
+          .single();
+
+        const { data: userRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', authData.user.id)
+          .single();
+
+        let dashboardPath = '/dashboard';
+
+        if (profile?.is_master_admin) {
+          dashboardPath = '/master-admin';
+        } else if (userRole?.role === 'admin') {
+          dashboardPath = '/admin-dashboard';
+        } else if (userRole?.role === 'sales') {
+          dashboardPath = '/sales-dashboard';
+        } else if (userRole?.role === 'dispatcher') {
+          dashboardPath = '/dispatch-dashboard';
+        } else if (userRole?.role === 'treasury') {
+          dashboardPath = '/treasury-dashboard';
+        } else {
+          // Check if driver
+          const { data: driver } = await supabase
+            .from('drivers')
+            .select('id')
+            .eq('user_id', authData.user.id)
+            .maybeSingle();
+          
+          if (driver) {
+            dashboardPath = '/driver-portal';
+          }
+        }
+
         toast({
           title: "Success",
           description: "Logged in successfully",
         });
-        navigate("/dashboard");
+        navigate(dashboardPath);
       }
     } catch (error: any) {
       toast({
@@ -128,11 +195,38 @@ const Auth = () => {
 
       if (setupError) throw setupError;
 
+      // Get user role and redirect to correct dashboard
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_master_admin, company_id')
+        .eq('user_id', authData.user.id)
+        .single();
+
+      const { data: userRole } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authData.user.id)
+        .single();
+
+      let dashboardPath = '/dashboard';
+
+      if (profile?.is_master_admin) {
+        dashboardPath = '/master-admin';
+      } else if (userRole?.role === 'admin') {
+        dashboardPath = '/admin-dashboard';
+      } else if (userRole?.role === 'sales') {
+        dashboardPath = '/sales-dashboard';
+      } else if (userRole?.role === 'dispatcher') {
+        dashboardPath = '/dispatch-dashboard';
+      } else if (userRole?.role === 'treasury') {
+        dashboardPath = '/treasury-dashboard';
+      }
+
       toast({
         title: "Success",
         description: "Account created successfully",
       });
-      navigate("/dashboard");
+      navigate(dashboardPath);
     } catch (error: any) {
       toast({
         variant: "destructive",

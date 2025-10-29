@@ -19,44 +19,6 @@ const Dashboard = () => {
   const [recentLoads, setRecentLoads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Redirect to role-specific dashboard
-  useEffect(() => {
-    const checkAndRedirect = async () => {
-      if (roleLoading) return;
-
-      if (isMasterAdmin) {
-        navigate('/master-admin', { replace: true });
-        return;
-      }
-
-      if (role === 'admin') {
-        navigate('/admin-dashboard', { replace: true });
-      } else if (role === 'sales') {
-        navigate('/sales-dashboard', { replace: true });
-      } else if (role === 'dispatcher') {
-        navigate('/dispatch-dashboard', { replace: true });
-      } else if (role === 'treasury') {
-        navigate('/treasury-dashboard', { replace: true });
-      } else if (!role) {
-        // Check if user is a driver (no role in user_roles table)
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: driver } = await supabase
-            .from('drivers')
-            .select('id')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          if (driver) {
-            navigate('/driver-portal', { replace: true });
-          }
-        }
-      }
-    };
-
-    checkAndRedirect();
-  }, [role, isMasterAdmin, roleLoading, navigate]);
-
   useEffect(() => {
     fetchDashboardData();
   }, []);
