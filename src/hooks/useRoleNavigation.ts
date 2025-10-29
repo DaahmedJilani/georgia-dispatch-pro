@@ -46,6 +46,7 @@ export function useRoleNavigation() {
     { label: 'Loads', path: '/loads' },
     { label: 'Drivers', path: '/drivers' },
     { label: 'Carriers', path: '/carriers' },
+    { label: 'Brokers', path: '/brokers' },
     { label: 'Documents', path: '/documents' },
     { label: 'Fleet Map', path: '/fleet-map' },
     { label: 'Messages', path: '/messages' },
