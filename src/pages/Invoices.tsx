@@ -16,10 +16,13 @@ import {
 import { Plus, ExternalLink, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateInvoiceDialog } from "@/components/invoices/CreateInvoiceDialog";
+import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
+import { UpgradeRequired } from "@/components/subscription/UpgradeRequired";
 
 const Invoices = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { features, loading: featuresLoading } = useSubscriptionFeatures();
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [companyId, setCompanyId] = useState<string>("");
@@ -127,6 +130,20 @@ const Invoices = () => {
       </Badge>
     );
   };
+
+  if (featuresLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!features.invoices) {
+    return <UpgradeRequired feature="Invoices" description="Invoice management and payment link generation is only available on the Pro plan ($50/month)." />;
+  }
 
   return (
     <DashboardLayout>

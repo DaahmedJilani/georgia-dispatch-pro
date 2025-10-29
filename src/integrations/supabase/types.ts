@@ -291,8 +291,10 @@ export type Database = {
           phone: string | null
           subscription_amount: number | null
           subscription_due_date: string | null
+          subscription_features: Json | null
           subscription_payment_status: string | null
           subscription_status: string | null
+          subscription_tier: string | null
           suspension_date: string | null
           updated_at: string
         }
@@ -310,8 +312,10 @@ export type Database = {
           phone?: string | null
           subscription_amount?: number | null
           subscription_due_date?: string | null
+          subscription_features?: Json | null
           subscription_payment_status?: string | null
           subscription_status?: string | null
+          subscription_tier?: string | null
           suspension_date?: string | null
           updated_at?: string
         }
@@ -329,8 +333,10 @@ export type Database = {
           phone?: string | null
           subscription_amount?: number | null
           subscription_due_date?: string | null
+          subscription_features?: Json | null
           subscription_payment_status?: string | null
           subscription_status?: string | null
+          subscription_tier?: string | null
           suspension_date?: string | null
           updated_at?: string
         }
@@ -1459,6 +1465,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_company_for_new_user: {
+        Args: { _company_name: string; _tier?: string; _user_id: string }
+        Returns: string
+      }
       create_company_for_user: {
         Args: {
           _company_name: string

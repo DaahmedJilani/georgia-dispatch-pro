@@ -13,9 +13,12 @@ import { MessageCircle, Send, Inbox, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
+import { UpgradeRequired } from "@/components/subscription/UpgradeRequired";
 
 const Messages = () => {
   const { toast } = useToast();
+  const { features, loading: featuresLoading } = useSubscriptionFeatures();
   const [messages, setMessages] = useState<any[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -232,6 +235,20 @@ const Messages = () => {
   };
 
   const unreadCount = messages.filter(m => !m.is_read && view === 'inbox').length;
+
+  if (featuresLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!features.messages) {
+    return <UpgradeRequired feature="Messages" />;
+  }
 
   return (
     <DashboardLayout>

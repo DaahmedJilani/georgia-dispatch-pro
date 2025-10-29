@@ -14,8 +14,11 @@ import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { formatDate, formatCurrency, getStatusBadgeVariant } from "@/lib/subscription-utils";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ArrowUpCircle } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
+import { TierBadge } from "@/components/subscription/TierBadge";
+import { FeatureList } from "@/components/subscription/FeatureList";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -27,6 +30,7 @@ const Settings = () => {
   const [twoFactorMethod, setTwoFactorMethod] = useState("sms");
   const subscription = useSubscriptionStatus();
   const { role: userRole, isMasterAdmin } = useUserRole();
+  const { tier, loading: featuresLoading } = useSubscriptionFeatures();
   const [profile, setProfile] = useState({
     first_name: "",
     last_name: "",
@@ -220,55 +224,93 @@ const Settings = () => {
               </Card>
             </div>
 
-            {/* Subscription Status (for Company Admins) */}
+            {/* Subscription Status & Tier (for Company Admins) */}
             {userRole === 'admin' && !isMasterAdmin && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Subscription Status</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {subscription.loading ? (
-                    <div className="text-center py-4">Loading subscription status...</div>
-                  ) : (
-                    <>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Status:</span>
-                        <Badge variant={getStatusBadgeVariant(subscription.status || 'pending')}>
-                          {subscription.status}
-                        </Badge>
-                      </div>
-                      {subscription.dueDate && (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Subscription Plan</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {featuresLoading ? (
+                      <div className="text-center py-4">Loading subscription info...</div>
+                    ) : (
+                      <>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">Next Payment Due:</span>
-                          <span className="font-semibold">{formatDate(subscription.dueDate)}</span>
+                          <span className="text-sm font-medium">Current Plan:</span>
+                          {tier && <TierBadge tier={tier} />}
                         </div>
-                      )}
-                      {subscription.amount && (
+                        
+                        {tier && (
+                          <div className="mt-4">
+                            <p className="text-sm font-medium mb-2">Included Features:</p>
+                            <FeatureList tier={tier} />
+                          </div>
+                        )}
+                        
+                        {tier === 'basic' && (
+                          <Alert>
+                            <ArrowUpCircle className="h-4 w-4" />
+                            <AlertTitle>Upgrade to Pro</AlertTitle>
+                            <AlertDescription>
+                              Get Driver Portal, Messages, Fleet Map, and Invoices for $50/month.
+                              Contact the master administrator to upgrade.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Payment Status</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {subscription.loading ? (
+                      <div className="text-center py-4">Loading payment status...</div>
+                    ) : (
+                      <>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">Amount:</span>
-                          <span className="font-semibold">{formatCurrency(subscription.amount)}</span>
+                          <span className="text-sm font-medium">Status:</span>
+                          <Badge variant={getStatusBadgeVariant(subscription.status || 'pending')}>
+                            {subscription.status}
+                          </Badge>
                         </div>
-                      )}
-                      {subscription.lastPayment && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium">Last Payment:</span>
-                          <span>{formatDate(subscription.lastPayment)}</span>
-                        </div>
-                      )}
-                      {subscription.status === 'suspended' && (
-                        <Alert variant="destructive">
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertTitle>Access Suspended</AlertTitle>
-                          <AlertDescription>
-                            Your company's access has been suspended due to non-payment. 
-                            Please contact the master administrator to resolve this issue.
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+                        {subscription.dueDate && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">Next Payment Due:</span>
+                            <span className="font-semibold">{formatDate(subscription.dueDate)}</span>
+                          </div>
+                        )}
+                        {subscription.amount && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">Amount:</span>
+                            <span className="font-semibold">{formatCurrency(subscription.amount)}</span>
+                          </div>
+                        )}
+                        {subscription.lastPayment && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium">Last Payment:</span>
+                            <span>{formatDate(subscription.lastPayment)}</span>
+                          </div>
+                        )}
+                        {subscription.status === 'suspended' && (
+                          <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Access Suspended</AlertTitle>
+                            <AlertDescription>
+                              Your company's access has been suspended due to non-payment. 
+                              Please contact the master administrator to resolve this issue.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             )}
 
             <div className="grid gap-6 md:grid-cols-2">

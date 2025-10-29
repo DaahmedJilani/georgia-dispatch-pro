@@ -11,6 +11,8 @@ import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { DriverSidePanel } from "@/components/map/DriverSidePanel";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
+import { UpgradeRequired } from "@/components/subscription/UpgradeRequired";
 
 interface Driver {
   id: string;
@@ -38,6 +40,7 @@ interface Driver {
 const FleetMap = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { features, loading: featuresLoading } = useSubscriptionFeatures();
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [filteredDrivers, setFilteredDrivers] = useState<Driver[]>([]);
   const [loading, setLoading] = useState(true);
@@ -284,6 +287,20 @@ const FleetMap = () => {
   };
 
   const statusCounts = getStatusCounts();
+
+  if (featuresLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!features.fleet_map) {
+    return <UpgradeRequired feature="Fleet Map" description="Real-time GPS tracking with Fleet Map is only available on the Pro plan ($50/month)." />;
+  }
 
   return (
     <DashboardLayout>

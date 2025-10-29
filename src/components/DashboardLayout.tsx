@@ -28,6 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import fleetLogo from "@/assets/fleet-logo.png";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useSubscriptionFeatures } from "@/hooks/useSubscriptionFeatures";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -41,6 +42,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const { role, isMasterAdmin } = useUserRole();
+  const { features } = useSubscriptionFeatures();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -110,7 +112,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
     // Admin gets team management
     if (role === 'admin') {
-      return [
+      const items = [
         { icon: LayoutDashboard, label: "Dashboard", path: "/admin-dashboard", roles: [] },
         { icon: UserCog, label: "Team", path: "/team", roles: [] },
         { icon: Package, label: "Loads", path: "/loads", roles: [] },
@@ -118,12 +120,19 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         { icon: Users, label: "Brokers", path: "/brokers", roles: [] },
         { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
         { icon: FileText, label: "Documents", path: "/documents", roles: [] },
-        { icon: DollarSign, label: "Invoices", path: "/invoices", roles: [] },
-        { icon: MessageCircle, label: "Messages", path: "/messages", roles: [] },
+      ];
+      
+      // Feature-gated items
+      if (features.invoices) items.push({ icon: DollarSign, label: "Invoices", path: "/invoices", roles: [] });
+      if (features.messages) items.push({ icon: MessageCircle, label: "Messages", path: "/messages", roles: [] });
+      
+      items.push(
         { icon: BarChart3, label: "Analytics", path: "/analytics", roles: [] },
         { icon: Shield, label: "Audit Logs", path: "/audit-logs", roles: [] },
-        { icon: Settings, label: "Settings", path: "/settings", roles: [] },
-      ];
+        { icon: Settings, label: "Settings", path: "/settings", roles: [] }
+      );
+      
+      return items;
     }
 
     // Sales Agent
@@ -140,38 +149,52 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
     // Dispatcher
     if (role === 'dispatcher') {
-      return [
+      const items = [
         { icon: LayoutDashboard, label: "Dashboard", path: "/dispatch-dashboard", roles: [] },
         { icon: Package, label: "Loads", path: "/loads", roles: [] },
         { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
         { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
-        { icon: Navigation, label: "Fleet Map", path: "/fleet-map", roles: [] },
-        { icon: FileText, label: "Documents", path: "/documents", roles: [] },
-        { icon: MessageCircle, label: "Messages", path: "/messages", roles: [] },
-        { icon: Settings, label: "Settings", path: "/settings", roles: [] },
       ];
+      
+      // Feature-gated items
+      if (features.fleet_map) items.push({ icon: Navigation, label: "Fleet Map", path: "/fleet-map", roles: [] });
+      items.push({ icon: FileText, label: "Documents", path: "/documents", roles: [] });
+      if (features.messages) items.push({ icon: MessageCircle, label: "Messages", path: "/messages", roles: [] });
+      items.push({ icon: Settings, label: "Settings", path: "/settings", roles: [] });
+      
+      return items;
     }
 
     // Treasury
     if (role === 'treasury') {
-      return [
+      const items = [
         { icon: LayoutDashboard, label: "Dashboard", path: "/treasury-dashboard", roles: [] },
-        { icon: DollarSign, label: "Invoices", path: "/invoices", roles: [] },
+      ];
+      
+      // Feature-gated items
+      if (features.invoices) items.push({ icon: DollarSign, label: "Invoices", path: "/invoices", roles: [] });
+      items.push(
         { icon: FileText, label: "Documents", path: "/documents", roles: [] },
         { icon: BarChart3, label: "Reports", path: "/analytics", roles: [] },
-        { icon: Settings, label: "Settings", path: "/settings", roles: [] },
-      ];
+        { icon: Settings, label: "Settings", path: "/settings", roles: [] }
+      );
+      
+      return items;
     }
 
     // Driver Portal
     if (role === 'driver') {
-      return [
+      const items = [
         { icon: LayoutDashboard, label: "Dashboard", path: "/driver-portal", roles: [] },
         { icon: Package, label: "My Loads", path: "/loads", roles: [] },
         { icon: FileText, label: "Documents", path: "/documents", roles: [] },
-        { icon: MessageCircle, label: "Messages", path: "/messages", roles: [] },
-        { icon: Settings, label: "Settings", path: "/settings", roles: [] },
       ];
+      
+      // Feature-gated items
+      if (features.messages) items.push({ icon: MessageCircle, label: "Messages", path: "/messages", roles: [] });
+      items.push({ icon: Settings, label: "Settings", path: "/settings", roles: [] });
+      
+      return items;
     }
 
     // Default fallback

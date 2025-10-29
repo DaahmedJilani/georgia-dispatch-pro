@@ -133,11 +133,24 @@ const Auth = () => {
           // Check if driver
           const { data: driver } = await supabase
             .from('drivers')
-            .select('id')
+            .select('id, company_id')
             .eq('user_id', authData.user.id)
             .maybeSingle();
           
           if (driver) {
+            // Check if company has driver portal feature
+            const { data: company } = await supabase
+              .from('companies')
+              .select('subscription_tier, subscription_features')
+              .eq('id', driver.company_id)
+              .single();
+
+            const features = company?.subscription_features as any;
+            if (company?.subscription_tier === 'basic' || !features?.driver_portal) {
+              await supabase.auth.signOut();
+              throw new Error('Driver Portal is not available on your company plan. Contact your administrator.');
+            }
+            
             dashboardPath = '/driver-portal';
           }
         }
@@ -185,11 +198,15 @@ const Auth = () => {
       const isGeorgiaAdmin = signupData.email === "ahmad@georgiaindustrials.com";
       
       const { error: setupError } = await supabase.rpc(
-        "create_company_for_user",
-        {
+        isGeorgiaAdmin ? "create_company_for_user" : "create_company_for_new_user",
+        isGeorgiaAdmin ? {
           _company_name: signupData.companyName,
           _user_id: authData.user.id,
           _is_georgia_admin: isGeorgiaAdmin,
+        } : {
+          _user_id: authData.user.id,
+          _company_name: signupData.companyName,
+          _tier: 'basic',
         }
       );
 

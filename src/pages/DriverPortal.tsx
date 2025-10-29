@@ -6,6 +6,8 @@ import { TruckIcon, MapPin, DollarSign, Building2, User, Phone, CheckCircle, Nav
 import { GPSConsentDialog } from '@/components/map/GPSConsentDialog';
 import { GPSStatusBadge } from '@/components/map/GPSStatusBadge';
 import { Badge } from '@/components/ui/badge';
+import { useSubscriptionFeatures } from '@/hooks/useSubscriptionFeatures';
+import { UpgradeRequired } from '@/components/subscription/UpgradeRequired';
 
 interface DriverStats {
   myActiveLoads: number;
@@ -29,6 +31,7 @@ interface CurrentLocation {
 
 export default function DriverPortal() {
   const [loading, setLoading] = useState(true);
+  const { features, loading: featuresLoading } = useSubscriptionFeatures();
   const [stats, setStats] = useState<DriverStats>({
     myActiveLoads: 0,
     myCompletedLoads: 0,
@@ -174,7 +177,7 @@ export default function DriverPortal() {
     },
   ];
 
-  if (loading) {
+  if (loading || featuresLoading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
@@ -182,6 +185,10 @@ export default function DriverPortal() {
         </div>
       </DashboardLayout>
     );
+  }
+
+  if (!features.driver_portal) {
+    return <UpgradeRequired feature="Driver Portal" description="Driver Portal is only available on the Pro plan ($50/month). Contact your administrator to upgrade and enable driver access." />;
   }
 
   return (

@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { CreateCompanyDialog } from '@/components/admin/CreateCompanyDialog';
 
 interface CompanyStats {
   id: string;
@@ -26,6 +27,7 @@ export default function MasterAdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalLoads, setTotalLoads] = useState(0);
   const [activeCompanies, setActiveCompanies] = useState(0);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchMasterAdminData();
@@ -111,7 +113,7 @@ export default function MasterAdminDashboard() {
             <Button variant="default" onClick={() => navigate('/subscriptions')}>
               Subscription Management
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setCreateDialogOpen(true)}>
               <Building2 className="mr-2 h-4 w-4" />
               Add Company
             </Button>
@@ -172,6 +174,12 @@ export default function MasterAdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <CreateCompanyDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={fetchMasterAdminData}
+      />
     </DashboardLayout>
   );
 }
