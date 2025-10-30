@@ -35,8 +35,7 @@ export const ContractActivationDialog = ({ carrier, onSuccess }: ContractActivat
 
     setSending(true);
     try {
-      // Call edge function to send DocuSign contract
-      const { data, error } = await supabase.functions.invoke('send-docusign-contract', {
+      const { data, error } = await supabase.functions.invoke('send-contract', {
         body: {
           carrier_id: carrier.id,
           signer_email: signerEmail,
@@ -46,18 +45,9 @@ export const ContractActivationDialog = ({ carrier, onSuccess }: ContractActivat
 
       if (error) throw error;
 
-      // Update carrier status to 'sent'
-      await supabase
-        .from('carriers')
-        .update({
-          contract_status: 'sent',
-          sale_stage: 'closed',
-        })
-        .eq('id', carrier.id);
-
       toast({
-        title: 'Contract Sent',
-        description: `DocuSign contract sent to ${signerEmail}`,
+        title: '✅ Contract Sent',
+        description: `Signing link sent to ${signerEmail}`,
       });
 
       setOpen(false);
@@ -84,7 +74,7 @@ export const ContractActivationDialog = ({ carrier, onSuccess }: ContractActivat
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Send Onboarding Contract</DialogTitle>
+          <DialogTitle>Send Contract for E-Signature</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
@@ -110,7 +100,7 @@ export const ContractActivationDialog = ({ carrier, onSuccess }: ContractActivat
           </div>
           <Button onClick={sendContract} disabled={sending} className="w-full">
             <Send className="mr-2 h-4 w-4" />
-            {sending ? 'Sending...' : 'Send DocuSign Contract'}
+            {sending ? 'Sending...' : 'Send Contract'}
           </Button>
         </div>
       </DialogContent>

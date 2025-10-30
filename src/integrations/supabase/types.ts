@@ -190,12 +190,13 @@ export type Database = {
           contract_signed_at: string | null
           contract_status: string | null
           created_at: string
-          docusign_envelope_id: string | null
-          docusign_status: string | null
           dot_number: string | null
           email: string | null
+          envelope_id: string | null
           id: string
           insurance_expiry: string | null
+          legacy_docusign_envelope_id: string | null
+          legacy_docusign_status: string | null
           mc_number: string | null
           name: string
           notes: string | null
@@ -213,12 +214,13 @@ export type Database = {
           contract_signed_at?: string | null
           contract_status?: string | null
           created_at?: string
-          docusign_envelope_id?: string | null
-          docusign_status?: string | null
           dot_number?: string | null
           email?: string | null
+          envelope_id?: string | null
           id?: string
           insurance_expiry?: string | null
+          legacy_docusign_envelope_id?: string | null
+          legacy_docusign_status?: string | null
           mc_number?: string | null
           name: string
           notes?: string | null
@@ -236,12 +238,13 @@ export type Database = {
           contract_signed_at?: string | null
           contract_status?: string | null
           created_at?: string
-          docusign_envelope_id?: string | null
-          docusign_status?: string | null
           dot_number?: string | null
           email?: string | null
+          envelope_id?: string | null
           id?: string
           insurance_expiry?: string | null
+          legacy_docusign_envelope_id?: string | null
+          legacy_docusign_status?: string | null
           mc_number?: string | null
           name?: string
           notes?: string | null
@@ -258,6 +261,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carriers_envelope_id_fkey"
+            columns: ["envelope_id"]
+            isOneToOne: false
+            referencedRelation: "envelopes"
             referencedColumns: ["id"]
           },
           {
@@ -692,6 +702,126 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      envelopes: {
+        Row: {
+          carrier_id: string | null
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          declined_at: string | null
+          driver_id: string | null
+          expires_at: string | null
+          id: string
+          ip_address: unknown
+          load_id: string | null
+          notes: string | null
+          opensign_envelope_id: string | null
+          sales_agent_id: string | null
+          sent_at: string | null
+          signed_at: string | null
+          signed_document_url: string | null
+          signer_email: string
+          signer_name: string
+          signing_url: string | null
+          status: string | null
+          template_id: string | null
+          unsigned_document_url: string | null
+          updated_at: string | null
+          user_agent: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          carrier_id?: string | null
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          declined_at?: string | null
+          driver_id?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown
+          load_id?: string | null
+          notes?: string | null
+          opensign_envelope_id?: string | null
+          sales_agent_id?: string | null
+          sent_at?: string | null
+          signed_at?: string | null
+          signed_document_url?: string | null
+          signer_email: string
+          signer_name: string
+          signing_url?: string | null
+          status?: string | null
+          template_id?: string | null
+          unsigned_document_url?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          carrier_id?: string | null
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          declined_at?: string | null
+          driver_id?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown
+          load_id?: string | null
+          notes?: string | null
+          opensign_envelope_id?: string | null
+          sales_agent_id?: string | null
+          sent_at?: string | null
+          signed_at?: string | null
+          signed_document_url?: string | null
+          signer_email?: string
+          signer_name?: string
+          signing_url?: string | null
+          status?: string | null
+          template_id?: string | null
+          unsigned_document_url?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "envelopes_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "carriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "envelopes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "envelopes_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "envelopes_load_id_fkey"
+            columns: ["load_id"]
+            isOneToOne: false
+            referencedRelation: "loads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "envelopes_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "contract_templates"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1425,6 +1555,47 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_events: {
+        Row: {
+          envelope_id: string | null
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean | null
+          processed_at: string | null
+          received_at: string | null
+        }
+        Insert: {
+          envelope_id?: string | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          processed?: boolean | null
+          processed_at?: string | null
+          received_at?: string | null
+        }
+        Update: {
+          envelope_id?: string | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean | null
+          processed_at?: string | null
+          received_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_events_envelope_id_fkey"
+            columns: ["envelope_id"]
+            isOneToOne: false
+            referencedRelation: "envelopes"
             referencedColumns: ["id"]
           },
         ]

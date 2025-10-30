@@ -17,7 +17,6 @@ interface CarrierInfo {
   phone: string | null;
   contract_signed: boolean;
   insurance_expiry: string | null;
-  docusign_envelope_id: string | null;
 }
 
 interface Driver {
