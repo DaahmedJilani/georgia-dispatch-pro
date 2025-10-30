@@ -15,6 +15,7 @@ import {
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateCarrierDialog } from "@/components/carriers/CreateCarrierDialog";
+import { EditCarrierDialog } from "@/components/carriers/EditCarrierDialog";
 import { ContractActivationDialog } from "@/components/sales/ContractActivationDialog";
 import {
   AlertDialog,
@@ -35,8 +36,10 @@ const Carriers = () => {
   const [loading, setLoading] = useState(true);
   const [companyId, setCompanyId] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [carrierToDelete, setCarrierToDelete] = useState<string | null>(null);
+  const [carrierToEdit, setCarrierToEdit] = useState<any>(null);
 
   useEffect(() => {
     checkAuth();
@@ -188,9 +191,21 @@ const Carriers = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => {
+                            setCarrierToEdit(carrier);
+                            setEditDialogOpen(true);
+                          }}
+                          title="Edit Carrier"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
                             setCarrierToDelete(carrier.id);
                             setDeleteDialogOpen(true);
                           }}
+                          title="Delete Carrier"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -210,6 +225,15 @@ const Carriers = () => {
         onSuccess={fetchCarriers}
         companyId={companyId}
       />
+
+      {carrierToEdit && (
+        <EditCarrierDialog
+          carrier={carrierToEdit}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSuccess={fetchCarriers}
+        />
+      )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

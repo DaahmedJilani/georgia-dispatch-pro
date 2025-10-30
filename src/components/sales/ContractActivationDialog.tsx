@@ -38,10 +38,9 @@ export const ContractActivationDialog = ({ carrier, onSuccess }: ContractActivat
       // Call edge function to send DocuSign contract
       const { data, error } = await supabase.functions.invoke('send-docusign-contract', {
         body: {
-          carrierId: carrier.id,
-          carrierName: carrier.name,
-          signerEmail,
-          signerName,
+          carrier_id: carrier.id,
+          signer_email: signerEmail,
+          signer_name: signerName,
         },
       });
 

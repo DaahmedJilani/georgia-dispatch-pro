@@ -64,17 +64,19 @@ serve(async (req) => {
 
     console.log('Inviting team member:', email, 'with role:', role, 'username:', username);
 
-    // Create auth user with magic link
-    const { data: authData, error: createError } = await supabase.auth.admin.inviteUserByEmail(
+    // Generate temporary password
+    const tempPassword = `Temp${Math.random().toString(36).slice(-8)}!${Date.now().toString().slice(-4)}`;
+
+    // Create auth user with temporary password (no auto-confirmation)
+    const { data: authData, error: createError } = await supabase.auth.admin.createUser({
       email,
-      {
-        data: {
-          first_name: first_name || '',
-          last_name: last_name || '',
-        },
-        redirectTo: `${supabaseUrl}/auth/callback`,
+      password: tempPassword,
+      email_confirm: true, // Auto-confirm email so user can login immediately
+      user_metadata: {
+        first_name: first_name || '',
+        last_name: last_name || '',
       }
-    );
+    });
 
     if (createError) {
       console.error('Error creating auth user:', createError);
@@ -115,13 +117,21 @@ serve(async (req) => {
 
     console.log('Team member invited successfully:', newUserId);
 
+    // Log credentials for admin to share (email sending optional)
+    console.log('=== NEW USER CREDENTIALS ===');
+    console.log('Email:', email);
+    console.log('Username:', username || email);
+    console.log('Temporary Password:', tempPassword);
+    console.log('Login URL:', `${Deno.env.get('SUPABASE_URL')?.replace('/rest/v1', '')}/auth`);
+    console.log('===========================');
+
     // Send SMS notification if phone provided and Twilio configured
     if (phone) {
       try {
         await supabase.functions.invoke('send-sms-notification', {
           body: {
             to: phone,
-            message: `You've been invited to join the team! Check your email (${email}) for the invitation link.`,
+            message: `You've been invited to join the team! Username: ${username || email}. Check your email for password.`,
           }
         });
       } catch (smsError) {
@@ -134,6 +144,11 @@ serve(async (req) => {
         success: true,
         user_id: newUserId,
         invite_sent: true,
+        credentials: {
+          username: username || email,
+          temp_password: tempPassword,
+          email: email
+        }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -342,6 +342,53 @@ export type Database = {
         }
         Relationships: []
       }
+      contract_templates: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          created_by: string | null
+          document_url: string | null
+          file_name: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+          version: number | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          created_by?: string | null
+          document_url?: string | null
+          file_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+          version?: number | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          document_url?: string | null
+          file_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dispatch_performance: {
         Row: {
           carrier_id: string | null

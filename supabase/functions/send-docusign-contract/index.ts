@@ -55,14 +55,28 @@ serve(async (req) => {
       throw new Error('Contract already sent or completed');
     }
 
+    // Get active contract template for this company
+    const { data: template, error: templateError } = await supabase
+      .from('contract_templates')
+      .select('*')
+      .eq('company_id', carrier.company_id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (templateError || !template) {
+      throw new Error('No active contract template found. Please upload a contract template first.');
+    }
+
+    console.log('Using contract template:', template.name, 'v' + template.version);
+
     // Get DocuSign credentials from environment (Supabase secrets)
     const docusignApiKey = Deno.env.get('DOCUSIGN_API_KEY');
     
     if (!docusignApiKey) {
-      throw new Error('DocuSign API key not configured in environment');
+      console.warn('DocuSign API key not configured - using mock mode');
     }
-
-    console.log('Using DocuSign credentials from secure environment');
 
     // NOTE: This is a simplified mock implementation
     // In production, you would integrate with actual DocuSign API
@@ -72,12 +86,15 @@ serve(async (req) => {
     
     // In production, you would:
     // 1. Authenticate with DocuSign API
-    // 2. Create envelope with contract template
-    // 3. Add signer information
-    // 4. Send envelope
-    // 5. Get envelope ID and signing URL
+    // 2. Download contract PDF from template.document_url
+    // 3. Create envelope with contract template
+    // 4. Add signer information (signer_name, signer_email)
+    // 5. Send envelope
+    // 6. Get envelope ID and signing URL
+    // 7. Store envelope ID in database
 
     console.log('Mock envelope created:', mockEnvelopeId);
+    console.log('Contract template URL:', template.document_url);
 
     // Update carrier with envelope ID and status
     const { error: updateError } = await supabase

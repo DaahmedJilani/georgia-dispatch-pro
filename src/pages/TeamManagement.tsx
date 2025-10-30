@@ -57,38 +57,13 @@ export default function TeamManagement() {
 
       if (!profile?.company_id) return;
 
-      const { data: members } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          user_id,
-          first_name,
-          last_name,
-          username,
-          created_at,
-          user_roles!inner(role)
-        `)
-        .eq('company_id', profile.company_id)
-        .order('created_at', { ascending: false });
+      // Call edge function to get team members with emails
+      const { data: teamData, error: teamError } = await supabase.functions.invoke('get-team-members');
 
-      if (members) {
-        // Get email for each user
-        const formattedMembers = await Promise.all(
-          members.map(async (member: any) => {
-            const { data: authUser } = await supabase.auth.admin.getUserById(member.user_id);
-            return {
-              id: member.id,
-              user_id: member.user_id,
-              first_name: member.first_name || 'N/A',
-              last_name: member.last_name || 'N/A',
-              username: member.username,
-              email: authUser?.user?.email || 'N/A',
-              role: member.user_roles[0]?.role || 'N/A',
-              created_at: member.created_at
-            };
-          })
-        );
-        setTeamMembers(formattedMembers);
+      if (teamError) throw teamError;
+
+      if (teamData?.team_members) {
+        setTeamMembers(teamData.team_members);
       }
     } catch (error) {
       console.error('Error fetching team members:', error);
