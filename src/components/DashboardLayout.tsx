@@ -24,6 +24,7 @@ import {
   Shield,
   MessageCircle,
   TrendingUp,
+  FileSignature,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import fleetLogo from "@/assets/fleet-logo.png";
@@ -115,6 +116,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       const items = [
         { icon: LayoutDashboard, label: "Dashboard", path: "/admin-dashboard", roles: [] },
         { icon: UserCog, label: "Team", path: "/team", roles: [] },
+        { icon: FileSignature, label: "Contracts", path: "/contract-management", roles: [] },
         { icon: Package, label: "Loads", path: "/loads", roles: [] },
         { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
         { icon: Users, label: "Brokers", path: "/brokers", roles: [] },
