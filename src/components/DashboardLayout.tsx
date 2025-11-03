@@ -156,6 +156,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         { icon: Package, label: "Loads", path: "/loads", roles: [] },
         { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
         { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
+        { icon: Users, label: "Brokers", path: "/brokers", roles: [] },
       ];
       
       // Feature-gated items
