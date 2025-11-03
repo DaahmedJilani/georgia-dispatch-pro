@@ -39,26 +39,41 @@ serve(async (req) => {
       throw new Error('User profile not found');
     }
 
-    // Get all team members in company
-    const { data: members, error: membersError } = await supabase
+    // Step 1: Get all profiles in company
+    const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select(`
-        id,
-        user_id,
-        first_name,
-        last_name,
-        username,
-        created_at,
-        user_roles!inner(role)
-      `)
+      .select('id, user_id, first_name, last_name, username, created_at')
       .eq('company_id', profile.company_id)
       .order('created_at', { ascending: false });
 
-    if (membersError) throw membersError;
+    if (profilesError) throw profilesError;
 
-    // Get emails for each member using service role
+    // Step 2: Get user_ids from profiles
+    const userIds = profiles?.map(p => p.user_id) || [];
+
+    if (userIds.length === 0) {
+      return new Response(
+        JSON.stringify({ team_members: [] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Step 3: Fetch roles for these users
+    const { data: roles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('user_id, role')
+      .in('user_id', userIds)
+      .eq('company_id', profile.company_id);
+
+    if (rolesError) throw rolesError;
+
+    // Step 4: Create a role lookup map
+    const roleMap = new Map();
+    roles?.forEach(r => roleMap.set(r.user_id, r.role));
+
+    // Step 5: Fetch emails and combine data
     const teamMembers = await Promise.all(
-      (members || []).map(async (member: any) => {
+      (profiles || []).map(async (member: any) => {
         const { data: authUser } = await supabase.auth.admin.getUserById(member.user_id);
         return {
           id: member.id,
@@ -67,7 +82,7 @@ serve(async (req) => {
           last_name: member.last_name || 'N/A',
           username: member.username,
           email: authUser?.user?.email || 'N/A',
-          role: member.user_roles[0]?.role || 'N/A',
+          role: roleMap.get(member.user_id) || 'N/A',
           created_at: member.created_at
         };
       })

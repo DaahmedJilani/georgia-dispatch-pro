@@ -54,6 +54,13 @@ export function useUserRole(): UserRoleData {
     };
 
     fetchUserRole();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      fetchUserRole();
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   return { role, isMasterAdmin, companyId, loading };

@@ -15,14 +15,19 @@ import {
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateBrokerDialog } from "@/components/brokers/CreateBrokerDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Brokers = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { role, isMasterAdmin } = useUserRole();
   const [brokers, setBrokers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [companyId, setCompanyId] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [brokerToDelete, setBrokerToDelete] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -68,6 +73,36 @@ const Brokers = () => {
       setLoading(false);
     }
   };
+
+  const handleDelete = async () => {
+    if (!brokerToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("brokers")
+        .delete()
+        .eq("id", brokerToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `${brokerToDelete.name} has been deleted`,
+      });
+
+      setDeleteDialogOpen(false);
+      setBrokerToDelete(null);
+      fetchBrokers();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to delete broker",
+      });
+    }
+  };
+
+  const canDelete = role === 'admin' || isMasterAdmin;
 
   return (
     <DashboardLayout>
@@ -118,12 +153,23 @@ const Brokers = () => {
                     <TableCell>{broker.payment_terms || "N/A"}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {canDelete && (
+                          <Button variant="ghost" size="icon">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => {
+                              setBrokerToDelete({ id: broker.id, name: broker.name });
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -140,6 +186,26 @@ const Brokers = () => {
         onSuccess={fetchBrokers}
         companyId={companyId}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Broker?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {brokerToDelete?.name}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };

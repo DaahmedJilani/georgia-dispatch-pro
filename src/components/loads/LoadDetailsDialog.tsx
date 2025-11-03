@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, MapPin, Calendar, Package, DollarSign, FileText, Truck, User, Building2, Upload, Download, Eye, Sparkles } from "lucide-react";
+import { Loader2, MapPin, Calendar, Package, DollarSign, FileText, Truck, User, Building2, Upload, Download, Eye, Sparkles, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { AIAssistDialog } from "@/components/ai/AIAssistDialog";
 import { LoadMapComponent } from "@/components/map/LoadMapComponent";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface LoadDetailsDialogProps {
   open: boolean;
@@ -20,11 +22,13 @@ interface LoadDetailsDialogProps {
 
 const LoadDetailsDialog = ({ open, onOpenChange, loadId, onUpdate }: LoadDetailsDialogProps) => {
   const { toast } = useToast();
+  const { role, isMasterAdmin } = useUserRole();
   const [load, setLoad] = useState<any>(null);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (loadId && open) {
@@ -159,6 +163,34 @@ const LoadDetailsDialog = ({ open, onOpenChange, loadId, onUpdate }: LoadDetails
     }
   };
 
+  const handleDelete = async () => {
+    if (!loadId) return;
+
+    try {
+      const { error } = await supabase
+        .from("loads")
+        .delete()
+        .eq("id", loadId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Load deleted successfully",
+      });
+
+      setDeleteDialogOpen(false);
+      onOpenChange(false);
+      onUpdate();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to delete load",
+      });
+    }
+  };
+
   if (loading || !load) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -175,10 +207,22 @@ const LoadDetailsDialog = ({ open, onOpenChange, loadId, onUpdate }: LoadDetails
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            Load {load.load_number}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Load {load.load_number}
+            </DialogTitle>
+            {(role === 'admin' || isMasterAdmin) && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Load
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         <Tabs defaultValue="details" className="w-full">
@@ -456,6 +500,27 @@ const LoadDetailsDialog = ({ open, onOpenChange, loadId, onUpdate }: LoadDetails
             </div>
           </TabsContent>
         </Tabs>
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Load?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete load {load.load_number}? This action cannot be undone.
+                All associated documents and data will be permanently removed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );

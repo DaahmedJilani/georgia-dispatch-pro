@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, UserCog, Key, Edit } from 'lucide-react';
+import { Plus, UserCog, Key, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { InviteTeamMemberDialog } from '@/components/team/InviteTeamMemberDialog';
 import { RoleAssignmentDialog } from '@/components/team/RoleAssignmentDialog';
 import { ResetUserPasswordDialog } from '@/components/admin/ResetUserPasswordDialog';
 import { EditUsernameDialog } from '@/components/admin/EditUsernameDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface TeamMember {
   id: string;
@@ -31,6 +32,7 @@ export default function TeamManagement() {
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [editUsernameDialogOpen, setEditUsernameDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<{ 
     id: string; 
     user_id: string;
@@ -74,6 +76,50 @@ export default function TeamManagement() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteMember = async () => {
+    if (!selectedUser) return;
+
+    try {
+      // Delete user_roles entry
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', selectedUser.user_id);
+
+      if (roleError) throw roleError;
+
+      // Delete profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', selectedUser.user_id);
+
+      if (profileError) throw profileError;
+
+      // Delete auth user via edge function
+      const { error: authError } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: selectedUser.user_id }
+      });
+
+      if (authError) throw authError;
+
+      toast({
+        title: "Success",
+        description: `${selectedUser.name} has been removed from the team`,
+      });
+
+      setDeleteDialogOpen(false);
+      setSelectedUser(null);
+      fetchTeamMembers();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to delete team member",
+      });
     }
   };
 
@@ -205,6 +251,24 @@ export default function TeamManagement() {
                         >
                           <Key className="h-4 w-4" />
                         </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser({
+                              id: member.id,
+                              user_id: member.user_id,
+                              role: member.role,
+                              email: member.email,
+                              name: `${member.first_name} ${member.last_name}`,
+                              username: member.username
+                            });
+                            setDeleteDialogOpen(true);
+                          }}
+                          title="Remove Team Member"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -245,6 +309,27 @@ export default function TeamManagement() {
           />
         </>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Team Member?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove {selectedUser?.name} from the team?
+              This will permanently delete their account and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMember}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove Member
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
     </DashboardLayout>
   );
