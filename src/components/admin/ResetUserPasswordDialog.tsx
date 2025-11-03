@@ -56,10 +56,10 @@ export function ResetUserPasswordDialog({
   };
 
   const handleSetPassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
+    if (!newPassword || newPassword.length < 8) {
       toast({
         title: 'Invalid Password',
-        description: 'Password must be at least 6 characters',
+        description: 'Password must be at least 8 characters and include uppercase, lowercase, numbers, and special characters',
         variant: 'destructive',
       });
       return;
@@ -129,10 +129,10 @@ export function ResetUserPasswordDialog({
               <Input
                 id="newPassword"
                 type="password"
-                placeholder="Enter new password (min 6 characters)"
+                placeholder="Strong password (min 8 chars, mixed case, numbers, symbols)"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                minLength={6}
+                minLength={8}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 User will not receive an email notification
