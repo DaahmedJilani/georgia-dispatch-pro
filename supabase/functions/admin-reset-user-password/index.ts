@@ -109,17 +109,17 @@ serve(async (req) => {
         console.error('Password update error:', updateError);
         
         // Handle weak password error specifically
-        if (updateError.message?.includes('weak') || updateError.message?.includes('pwned')) {
+        if (updateError.message?.includes('weak') || updateError.message?.includes('pwned') || (updateError as any).code === 'weak_password') {
           return new Response(
             JSON.stringify({ 
-              error: 'Password is too weak or commonly used. Please choose a stronger, unique password with at least 8 characters including uppercase, lowercase, numbers, and special characters.' 
+              message: 'Password is too weak or commonly used. Please choose a stronger, unique password with at least 8 characters including uppercase, lowercase, numbers, and special characters.' 
             }),
             { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
         
         return new Response(
-          JSON.stringify({ error: updateError.message || 'Failed to update password' }),
+          JSON.stringify({ message: updateError.message || 'Failed to update password' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }

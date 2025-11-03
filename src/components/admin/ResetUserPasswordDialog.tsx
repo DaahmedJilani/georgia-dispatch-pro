@@ -67,14 +67,22 @@ export function ResetUserPasswordDialog({
 
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('admin-reset-user-password', {
+      const { data, error } = await supabase.functions.invoke('admin-reset-user-password', {
         body: {
           targetUserId: userId,
           newPassword: newPassword,
         },
       });
 
-      if (error) throw error;
+      // Check for error response
+      if (error) {
+        throw new Error(error.message || 'Failed to update password');
+      }
+      
+      // Check if response contains error message
+      if (data?.error || data?.message) {
+        throw new Error(data.error || data.message);
+      }
 
       toast({
         title: 'Password Updated',
@@ -84,9 +92,10 @@ export function ResetUserPasswordDialog({
       setNewPassword('');
       onOpenChange(false);
     } catch (error: any) {
+      console.error('Password reset error:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to update password',
+        description: error.message || error.toString() || 'Failed to update password',
         variant: 'destructive',
       });
     } finally {
