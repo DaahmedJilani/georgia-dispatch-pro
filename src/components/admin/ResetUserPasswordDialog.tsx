@@ -67,21 +67,45 @@ export function ResetUserPasswordDialog({
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-reset-user-password', {
+      const response = await supabase.functions.invoke('admin-reset-user-password', {
         body: {
           targetUserId: userId,
           newPassword: newPassword,
         },
       });
 
-      // Check for error response
-      if (error) {
-        throw new Error(error.message || 'Failed to update password');
+      console.log('Full response:', response);
+
+      // Check if there's an error in the response
+      if (response.error) {
+        let errorMessage = 'Failed to update password';
+        
+        // Try to parse the error context which may contain our custom message
+        if (response.error.context) {
+          try {
+            const context = typeof response.error.context === 'string' 
+              ? JSON.parse(response.error.context) 
+              : response.error.context;
+            errorMessage = context.message || context.error || errorMessage;
+          } catch (e) {
+            console.error('Failed to parse error context:', e);
+          }
+        }
+        
+        // Fallback to direct error message
+        errorMessage = response.error.message || errorMessage;
+        
+        throw new Error(errorMessage);
       }
       
-      // Check if response contains error message
-      if (data?.error || data?.message) {
-        throw new Error(data.error || data.message);
+      // Check data for error/message (success case should have success: true)
+      if (response.data) {
+        if (response.data.error) {
+          throw new Error(response.data.error);
+        }
+        if (response.data.message && !response.data.success) {
+          throw new Error(response.data.message);
+        }
       }
 
       toast({
