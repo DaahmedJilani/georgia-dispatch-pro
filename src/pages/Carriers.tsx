@@ -12,11 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, Truck, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CreateCarrierDialog } from "@/components/carriers/CreateCarrierDialog";
 import { EditCarrierDialog } from "@/components/carriers/EditCarrierDialog";
 import { ContractActivationDialog } from "@/components/sales/ContractActivationDialog";
+import { CarrierDetailView } from "@/components/carriers/CarrierDetailView";
+import { BulkImportDialog } from "@/components/carriers/BulkImportDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Loader2 } from "lucide-react";
 
 const Carriers = () => {
   const navigate = useNavigate();
@@ -40,6 +43,11 @@ const Carriers = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [carrierToDelete, setCarrierToDelete] = useState<string | null>(null);
   const [carrierToEdit, setCarrierToEdit] = useState<any>(null);
+  const [expandedCarriers, setExpandedCarriers] = useState<Set<string>>(new Set());
+  const [carrierDrivers, setCarrierDrivers] = useState<Record<string, any[]>>({});
+  const [loadingDrivers, setLoadingDrivers] = useState<Set<string>>(new Set());
+  const [showDetailView, setShowDetailView] = useState(false);
+  const [detailCarrierId, setDetailCarrierId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -86,6 +94,54 @@ const Carriers = () => {
     }
   };
 
+  const toggleCarrierExpanded = async (carrierId: string) => {
+    const newExpanded = new Set(expandedCarriers);
+    
+    if (expandedCarriers.has(carrierId)) {
+      newExpanded.delete(carrierId);
+      setExpandedCarriers(newExpanded);
+    } else {
+      newExpanded.add(carrierId);
+      setExpandedCarriers(newExpanded);
+      
+      if (!carrierDrivers[carrierId]) {
+        await fetchCarrierDrivers(carrierId);
+      }
+    }
+  };
+
+  const fetchCarrierDrivers = async (carrierId: string) => {
+    setLoadingDrivers(prev => new Set(prev).add(carrierId));
+    
+    try {
+      const { data, error } = await supabase
+        .from('drivers')
+        .select('*')
+        .eq('carrier_id', carrierId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setCarrierDrivers(prev => ({
+        ...prev,
+        [carrierId]: data || []
+      }));
+    } catch (error: any) {
+      console.error('Error fetching drivers:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load drivers",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingDrivers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(carrierId);
+        return newSet;
+      });
+    }
+  };
+
   const handleDelete = async () => {
     if (!carrierToDelete) return;
 
@@ -115,6 +171,11 @@ const Carriers = () => {
     }
   };
 
+  const openCarrierDetail = (carrierId: string) => {
+    setDetailCarrierId(carrierId);
+    setShowDetailView(true);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -128,6 +189,7 @@ const Carriers = () => {
               <Plus className="mr-2 h-4 w-4" />
               Start Onboarding
             </Button>
+            <BulkImportDialog onSuccess={fetchCarriers} />
             <Button onClick={() => setCreateDialogOpen(true)} variant="outline">
               <Plus className="mr-2 h-4 w-4" />
               Quick Add Carrier
@@ -139,11 +201,11 @@ const Carriers = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12"></TableHead>
                 <TableHead>Name / Status</TableHead>
-                <TableHead>MC Number</TableHead>
-                <TableHead>DOT Number</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead>MC / DOT</TableHead>
+                <TableHead>Drivers</TableHead>
+                <TableHead>Contact</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -161,64 +223,173 @@ const Carriers = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                carriers.map((carrier) => (
-                  <TableRow key={carrier.id}>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium">{carrier.name}</span>
-                        <div className="flex gap-2">
-                          {carrier.contract_status === 'signed' && (
-                            <Badge variant="default" className="bg-green-600">Contract Signed</Badge>
-                          )}
-                          {carrier.contract_status === 'sent' && (
-                            <Badge variant="secondary">Pending Signature</Badge>
-                          )}
-                          {carrier.sale_stage === 'closed' && (
-                            <Badge variant="outline">Closed</Badge>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{carrier.mc_number || "N/A"}</TableCell>
-                    <TableCell>{carrier.dot_number || "N/A"}</TableCell>
-                    <TableCell>{carrier.phone || "N/A"}</TableCell>
-                    <TableCell>{carrier.email || "N/A"}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <ContractActivationDialog
-                          carrier={{
-                            id: carrier.id,
-                            name: carrier.name,
-                            email: carrier.email || '',
-                          }}
-                          onSuccess={fetchCarriers}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setCarrierToEdit(carrier);
-                            setEditDialogOpen(true);
-                          }}
-                          title="Edit Carrier"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setCarrierToDelete(carrier.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                          title="Delete Carrier"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                carriers.map((carrier) => {
+                  const isExpanded = expandedCarriers.has(carrier.id);
+                  const drivers = carrierDrivers[carrier.id] || [];
+                  const isLoadingDrivers = loadingDrivers.has(carrier.id);
+
+                  return (
+                    <>
+                      <TableRow key={carrier.id}>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => toggleCarrierExpanded(carrier.id)}
+                          >
+                            {isExpanded ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <div 
+                            className="cursor-pointer hover:underline"
+                            onClick={() => openCarrierDetail(carrier.id)}
+                          >
+                            <p className="font-medium">{carrier.name}</p>
+                            <div className="flex gap-1 mt-1">
+                              {carrier.contract_status === 'signed' && (
+                                <Badge variant="default" className="text-xs bg-green-600">Contract Signed</Badge>
+                              )}
+                              {carrier.contract_status === 'sent' && (
+                                <Badge variant="secondary" className="text-xs">Pending Signature</Badge>
+                              )}
+                              {carrier.sale_stage && (
+                                <Badge variant="outline" className="text-xs">{carrier.sale_stage}</Badge>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <p>MC: {carrier.mc_number || 'N/A'}</p>
+                            <p className="text-muted-foreground">DOT: {carrier.dot_number || 'N/A'}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="gap-1">
+                            <Truck className="h-3 w-3" />
+                            {drivers.length} driver{drivers.length !== 1 ? 's' : ''}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <p>{carrier.contact_name || 'N/A'}</p>
+                            <p className="text-muted-foreground">{carrier.email || carrier.phone || 'N/A'}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <ContractActivationDialog
+                              carrier={{
+                                id: carrier.id,
+                                name: carrier.name,
+                                email: carrier.email || '',
+                              }}
+                              onSuccess={fetchCarriers}
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => navigate(`/onboarding?carrier_id=${carrier.id}`)}
+                              title="Edit via Onboarding"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setCarrierToDelete(carrier.id);
+                                setDeleteDialogOpen(true);
+                              }}
+                              title="Delete Carrier"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      
+                      {isExpanded && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="bg-muted/30">
+                            <div className="p-4">
+                              {isLoadingDrivers ? (
+                                <div className="flex items-center justify-center py-4">
+                                  <Loader2 className="h-6 w-6 animate-spin" />
+                                </div>
+                              ) : drivers.length === 0 ? (
+                                <div className="text-center py-4">
+                                  <p className="text-muted-foreground mb-3">No drivers added yet</p>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => navigate(`/onboarding?carrier_id=${carrier.id}`)}
+                                  >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Add Driver via Onboarding
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <h4 className="font-semibold text-sm">Drivers</h4>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => navigate(`/onboarding?carrier_id=${carrier.id}`)}
+                                    >
+                                      <Plus className="h-3 w-3 mr-2" />
+                                      Add Driver
+                                    </Button>
+                                  </div>
+                                  {drivers.map((driver) => (
+                                    <Card key={driver.id} className="p-3">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2">
+                                            <p className="font-medium text-sm">
+                                              {driver.first_name} {driver.last_name}
+                                            </p>
+                                            <Badge variant={driver.status === 'available' ? 'default' : 'secondary'} className="text-xs">
+                                              {driver.status}
+                                            </Badge>
+                                            {driver.portal_access_enabled && (
+                                              <Badge variant="outline" className="text-xs bg-green-500/10">
+                                                Portal Access
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-x-4 mt-1 text-xs text-muted-foreground">
+                                            <p>📞 {driver.phone || 'N/A'}</p>
+                                            <p>🪪 {driver.license_number || 'N/A'}</p>
+                                            <p>📧 {driver.email || 'N/A'}</p>
+                                            <p>🚛 CDL {driver.cdl_class || 'N/A'}</p>
+                                          </div>
+                                        </div>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => openCarrierDetail(carrier.id)}
+                                        >
+                                          View Details
+                                        </Button>
+                                      </div>
+                                    </Card>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -246,7 +417,7 @@ const Carriers = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Carrier</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this carrier? This action cannot be undone.
+              Are you sure you want to delete this carrier and all associated drivers? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -255,6 +426,18 @@ const Carriers = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {detailCarrierId && (
+        <CarrierDetailView
+          carrierId={detailCarrierId}
+          open={showDetailView}
+          onOpenChange={setShowDetailView}
+          onEdit={() => {
+            setShowDetailView(false);
+            navigate(`/onboarding?carrier_id=${detailCarrierId}`);
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 };

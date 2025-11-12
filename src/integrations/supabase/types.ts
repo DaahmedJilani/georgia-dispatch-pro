@@ -671,6 +671,8 @@ export type Database = {
           first_name: string
           gps_consent: boolean | null
           id: string
+          invitation_accepted_at: string | null
+          invitation_sent_at: string | null
           last_location_update: string | null
           last_name: string
           license_expiry: string | null
@@ -679,6 +681,8 @@ export type Database = {
           medical_card_url: string | null
           notes: string | null
           phone: string | null
+          portal_access_enabled: boolean | null
+          portal_access_revoked_at: string | null
           sales_agent_id: string | null
           signed_agreement_url: string | null
           status: string | null
@@ -698,6 +702,8 @@ export type Database = {
           first_name: string
           gps_consent?: boolean | null
           id?: string
+          invitation_accepted_at?: string | null
+          invitation_sent_at?: string | null
           last_location_update?: string | null
           last_name: string
           license_expiry?: string | null
@@ -706,6 +712,8 @@ export type Database = {
           medical_card_url?: string | null
           notes?: string | null
           phone?: string | null
+          portal_access_enabled?: boolean | null
+          portal_access_revoked_at?: string | null
           sales_agent_id?: string | null
           signed_agreement_url?: string | null
           status?: string | null
@@ -725,6 +733,8 @@ export type Database = {
           first_name?: string
           gps_consent?: boolean | null
           id?: string
+          invitation_accepted_at?: string | null
+          invitation_sent_at?: string | null
           last_location_update?: string | null
           last_name?: string
           license_expiry?: string | null
@@ -733,6 +743,8 @@ export type Database = {
           medical_card_url?: string | null
           notes?: string | null
           phone?: string | null
+          portal_access_enabled?: boolean | null
+          portal_access_revoked_at?: string | null
           sales_agent_id?: string | null
           signed_agreement_url?: string | null
           status?: string | null

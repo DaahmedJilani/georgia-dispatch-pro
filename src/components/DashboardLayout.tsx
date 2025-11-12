@@ -119,7 +119,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         { icon: UserCog, label: "Team", path: "/team", roles: [] },
         { icon: FileSignature, label: "Contracts", path: "/contract-management", roles: [] },
         { icon: Package, label: "Loads", path: "/loads", roles: [] },
-        { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
         { icon: Users, label: "Brokers", path: "/brokers", roles: [] },
         { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
         { icon: FileText, label: "Documents", path: "/documents", roles: [] },
@@ -143,7 +142,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       return [
         { icon: LayoutDashboard, label: "Dashboard", path: "/sales-dashboard", roles: [] },
         { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
-        { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
         { icon: FileText, label: "Documents", path: "/documents", roles: [] },
         { icon: BarChart3, label: "My Performance", path: "/analytics", roles: [] },
         { icon: Settings, label: "Settings", path: "/settings", roles: [] },
@@ -155,7 +153,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         const items = [
           { icon: LayoutDashboard, label: "Dashboard", path: "/dispatch-dashboard", roles: [] },
           { icon: Package, label: "Loads", path: "/loads", roles: [] },
-          { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
           { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
           { icon: UserPlus, label: "Onboarding", path: "/onboarding", roles: [] },
           { icon: Users, label: "Brokers", path: "/brokers", roles: [] },
