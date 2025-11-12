@@ -121,12 +121,18 @@ const Carriers = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Carriers</h1>
-            <p className="text-muted-foreground">Manage carrier companies</p>
+            <p className="text-muted-foreground">Manage carrier companies and their drivers</p>
           </div>
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Carrier
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate('/onboarding')} variant="default">
+              <Plus className="mr-2 h-4 w-4" />
+              Start Onboarding
+            </Button>
+            <Button onClick={() => setCreateDialogOpen(true)} variant="outline">
+              <Plus className="mr-2 h-4 w-4" />
+              Quick Add Carrier
+            </Button>
+          </div>
         </div>
 
         <Card>

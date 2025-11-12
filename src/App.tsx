@@ -21,6 +21,7 @@ import Loads from "./pages/Loads";
 import Drivers from "./pages/Drivers";
 import Brokers from "./pages/Brokers";
 import Carriers from "./pages/Carriers";
+import CarrierOnboarding from "./pages/CarrierOnboarding";
 import Documents from "./pages/Documents";
 import Invoices from "./pages/Invoices";
 import FleetMap from "./pages/FleetMap";
@@ -70,6 +71,7 @@ const App = () => (
           <Route path="/drivers" element={<Drivers />} />
           <Route path="/brokers" element={<Brokers />} />
           <Route path="/carriers" element={<Carriers />} />
+          <Route path="/onboarding" element={<CarrierOnboarding />} />
           <Route path="/documents" element={<Documents />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route 

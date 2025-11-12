@@ -124,6 +124,57 @@ export type Database = {
           },
         ]
       }
+      carrier_attachments: {
+        Row: {
+          attachment_type: string
+          carrier_id: string
+          company_id: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          attachment_type: string
+          carrier_id: string
+          company_id: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          attachment_type?: string
+          carrier_id?: string
+          company_id?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carrier_attachments_carrier_id_fkey"
+            columns: ["carrier_id"]
+            isOneToOne: false
+            referencedRelation: "carriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carrier_attachments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       carrier_contacts: {
         Row: {
           carrier_id: string
@@ -186,6 +237,7 @@ export type Database = {
         Row: {
           address: string | null
           company_id: string
+          contact_name: string | null
           contract_signed: boolean | null
           contract_signed_at: string | null
           contract_status: string | null
@@ -201,6 +253,7 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
+          preferred_routes: string | null
           sale_stage: string | null
           sales_agent_id: string | null
           stage_updated_at: string | null
@@ -210,6 +263,7 @@ export type Database = {
         Insert: {
           address?: string | null
           company_id: string
+          contact_name?: string | null
           contract_signed?: boolean | null
           contract_signed_at?: string | null
           contract_status?: string | null
@@ -225,6 +279,7 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
+          preferred_routes?: string | null
           sale_stage?: string | null
           sales_agent_id?: string | null
           stage_updated_at?: string | null
@@ -234,6 +289,7 @@ export type Database = {
         Update: {
           address?: string | null
           company_id?: string
+          contact_name?: string | null
           contract_signed?: boolean | null
           contract_signed_at?: string | null
           contract_status?: string | null
@@ -249,6 +305,7 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          preferred_routes?: string | null
           sale_stage?: string | null
           sales_agent_id?: string | null
           stage_updated_at?: string | null
@@ -603,66 +660,81 @@ export type Database = {
       drivers: {
         Row: {
           carrier_id: string | null
+          cdl_class: string | null
           company_id: string
           created_at: string
           current_location_lat: number | null
           current_location_lng: number | null
           dispatcher_id: string | null
           email: string | null
+          experience_years: number | null
           first_name: string
           gps_consent: boolean | null
           id: string
           last_location_update: string | null
           last_name: string
           license_expiry: string | null
+          license_file_url: string | null
           license_number: string | null
+          medical_card_url: string | null
           notes: string | null
           phone: string | null
           sales_agent_id: string | null
+          signed_agreement_url: string | null
           status: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           carrier_id?: string | null
+          cdl_class?: string | null
           company_id: string
           created_at?: string
           current_location_lat?: number | null
           current_location_lng?: number | null
           dispatcher_id?: string | null
           email?: string | null
+          experience_years?: number | null
           first_name: string
           gps_consent?: boolean | null
           id?: string
           last_location_update?: string | null
           last_name: string
           license_expiry?: string | null
+          license_file_url?: string | null
           license_number?: string | null
+          medical_card_url?: string | null
           notes?: string | null
           phone?: string | null
           sales_agent_id?: string | null
+          signed_agreement_url?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           carrier_id?: string | null
+          cdl_class?: string | null
           company_id?: string
           created_at?: string
           current_location_lat?: number | null
           current_location_lng?: number | null
           dispatcher_id?: string | null
           email?: string | null
+          experience_years?: number | null
           first_name?: string
           gps_consent?: boolean | null
           id?: string
           last_location_update?: string | null
           last_name?: string
           license_expiry?: string | null
+          license_file_url?: string | null
           license_number?: string | null
+          medical_card_url?: string | null
           notes?: string | null
           phone?: string | null
           sales_agent_id?: string | null
+          signed_agreement_url?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string | null

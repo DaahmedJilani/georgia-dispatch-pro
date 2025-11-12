@@ -25,6 +25,7 @@ import {
   MessageCircle,
   TrendingUp,
   FileSignature,
+  UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import fleetLogo from "@/assets/fleet-logo.png";
@@ -149,15 +150,16 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       ];
     }
 
-    // Dispatcher
-    if (role === 'dispatcher') {
-      const items = [
-        { icon: LayoutDashboard, label: "Dashboard", path: "/dispatch-dashboard", roles: [] },
-        { icon: Package, label: "Loads", path: "/loads", roles: [] },
-        { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
-        { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
-        { icon: Users, label: "Brokers", path: "/brokers", roles: [] },
-      ];
+      // Dispatcher
+      if (role === 'dispatcher') {
+        const items = [
+          { icon: LayoutDashboard, label: "Dashboard", path: "/dispatch-dashboard", roles: [] },
+          { icon: Package, label: "Loads", path: "/loads", roles: [] },
+          { icon: Truck, label: "Drivers", path: "/drivers", roles: [] },
+          { icon: Building2, label: "Carriers", path: "/carriers", roles: [] },
+          { icon: UserPlus, label: "Onboarding", path: "/onboarding", roles: [] },
+          { icon: Users, label: "Brokers", path: "/brokers", roles: [] },
+        ];
       
       // Feature-gated items
       if (features.fleet_map) items.push({ icon: Navigation, label: "Fleet Map", path: "/fleet-map", roles: [] });

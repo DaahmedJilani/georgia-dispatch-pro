@@ -143,9 +143,12 @@ const Drivers = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Drivers</h1>
-            <p className="text-muted-foreground">Manage your fleet drivers</p>
+            <p className="text-muted-foreground">View and manage drivers across all carriers</p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/onboarding')}>
+              Use Carrier Onboarding
+            </Button>
             <ExportButton onExport={() => {
               const csvContent = [
                 ['Name', 'Phone', 'Email', 'License', 'Status'].join(','),
